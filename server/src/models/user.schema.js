@@ -31,7 +31,10 @@ const userSchema = new mongoose.Schema(
             select: false,
             minlength: [8, "Password must be at least 8 characters long"]
         },
-
+        gander: {
+            type: String,
+            enum: ["male", "female"],
+        },
         addresses: [
             {
                 label: { type: String, enum: ["home", "work", "other"], default: "home" },
@@ -43,7 +46,8 @@ const userSchema = new mongoose.Schema(
                     type: String,
                     required: true,
                     match: [/^01[0125][0-9]{8}$/, "Invalid phone number"]
-                }, isDefault: { type: Boolean, default: false }
+                },
+                isDefault: { type: Boolean, default: false }
 
             }
         ],
