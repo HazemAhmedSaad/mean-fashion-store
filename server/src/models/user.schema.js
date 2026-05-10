@@ -28,18 +28,10 @@ const userSchema = new mongoose.Schema(
         password: {
             type: String,
             required: true,
-            select: false
+            select: false,
+            minlength: [8, "Password must be at least 8 characters long"]
         },
-        passwordConfirm: {
-            type: String,
-            required: true,
-            validate: {
-                validator: function (el) {
-                    return el === this.password;
-                },
-                message: "Passwords are not the same!"
-            }
-        },
+
         addresses: [
             {
                 label: { type: String, enum: ["home", "work", "other"], default: "home" },
@@ -50,7 +42,7 @@ const userSchema = new mongoose.Schema(
                 phoneNumber: {
                     type: String,
                     required: true,
-                    match: [/^01[0-2,5]{1}[0-9]{8}$/, "Invalid phone number"]
+                    match: [/^01[0125][0-9]{8}$/, "Invalid phone number"]
                 }, isDefault: { type: Boolean, default: false }
 
             }
@@ -59,7 +51,7 @@ const userSchema = new mongoose.Schema(
         role: {
             type: String,
             enum: ["user", "admin"],
-            default: "user"
+            default: "user",
         },
 
         isActive: {
@@ -69,20 +61,12 @@ const userSchema = new mongoose.Schema(
     },
     { timestamps: true }
 );
-userSchema.index({ phone: 1 });
 
-userSchema.pre("save", async function (next) {
-    try {
-        if (this.isModified("password")) {
-            this.password = await bcrypt.hash(this.password, 12);
-            this.passwordConfirm = undefined;
-        }
-        next();
-    } catch (err) {
-        next(err);
-    }
+userSchema.pre("save", async function () {
+    if (!this.isModified("password")) return;
+
+    this.password = await bcrypt.hash(this.password, 12);
 });
-userSchema.index({ phone: 1 });
 
 userSchema.methods.correctPassword = async function (inputPassword) {
     return await bcrypt.compare(inputPassword, this.password);
