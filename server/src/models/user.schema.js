@@ -28,12 +28,12 @@ const userSchema = new mongoose.Schema(
         password: {
             type: String,
             required: true,
-            select: false,
             minlength: [8, "Password must be at least 8 characters long"]
         },
-        gander: {
+        gender: {
             type: String,
-            enum: ["male", "female"],
+            enum: ["male", "female", null],
+            default: null
         },
         addresses: [
             {
@@ -61,6 +61,11 @@ const userSchema = new mongoose.Schema(
         isActive: {
             type: Boolean,
             default: true
+        },
+        isDeleted: {
+            type: Boolean,
+            default: false,
+            select: false
         }
     },
     { timestamps: true }

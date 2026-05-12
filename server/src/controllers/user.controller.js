@@ -1,23 +1,47 @@
 import User from "../models/user.schema.js";
-import asyncHandler from './../utils/asyncHandler.js';
-import AppError from './../utils/appError.js';
-import APIFeatures from './../utils/apiFeatures.js';
+import asyncHandler from "../utils/asyncHandler.js";
+import AppError from "../utils/appError.js";
+import APIFeatures from "../utils/apiFeatures.js";
+
+
+// ======================================================
+// Constants
+// ======================================================
+
+const USER_NOT_FOUND = "User not found";
+const ADDRESS_NOT_FOUND = "Address not found";
 
 
 // ======================================================
 // Filter Allowed Fields Utility
 // ======================================================
 
+const filterObj = (obj, allowedFields) => {
+    const filteredObj = {};
 
-const filterObj = (obj, ...allowedFields) => {
-    const newObj = {};
-
-    Object.keys(obj).forEach((key) => {
-        if (allowedFields.includes(key)) {
-            newObj[key] = obj[key];
+    for (const key of allowedFields) {
+        if (obj[key] !== undefined) {
+            filteredObj[key] = obj[key];
         }
-    });
-    return newObj;
+    }
+
+    return filteredObj;
+};
+
+
+// ======================================================
+// Get User Helper
+// ======================================================
+
+const getUserById = async (id, select = "") => {
+
+    const user = await User.findById(id).select("+isDeleted")
+    if (!user || user.isDeleted) {
+        throw new AppError(USER_NOT_FOUND, 404);
+    }
+    // remove sensitive fields
+    user.isDeleted = undefined;
+    return user;
 };
 
 
@@ -27,13 +51,9 @@ const filterObj = (obj, ...allowedFields) => {
 // @access  Private
 // ======================================================
 
-export const getMe = asyncHandler(async (req, res, next) => {
+export const getMe = asyncHandler(async (req, res) => {
 
-    const user = await User.findById(req.user._id);
-
-    if (!user || user.isDeleted) {
-        return next(new AppError("User not found", 404));
-    }
+    const user = await getUserById(req.user._id);
 
     res.status(200).json({
         success: true,
@@ -50,7 +70,7 @@ export const getMe = asyncHandler(async (req, res, next) => {
 
 export const updateMe = asyncHandler(async (req, res, next) => {
 
-    // Prevent password updates here
+    // Prevent password updates
     if (req.body.password || req.body.newPassword) {
         return next(
             new AppError(
@@ -61,13 +81,12 @@ export const updateMe = asyncHandler(async (req, res, next) => {
     }
 
     // Filter allowed fields
-    const filteredBody = filterObj(
-        req.body,
+    const filteredBody = filterObj(req.body, [
         "name",
         "email",
         "phone",
         "gender"
-    );
+    ]);
 
     const updatedUser = await User.findByIdAndUpdate(
         req.user._id,
@@ -76,7 +95,7 @@ export const updateMe = asyncHandler(async (req, res, next) => {
             new: true,
             runValidators: true
         }
-    );
+    ).select("-password");
 
     res.status(200).json({
         success: true,
@@ -97,23 +116,27 @@ export const changePassword = asyncHandler(async (req, res, next) => {
 
     if (!currentPassword || !newPassword) {
         return next(
-            new AppError("Please provide current password and new password", 400)
+            new AppError(
+                "Please provide current password and new password",
+                400
+            )
         );
     }
 
-    const user = await User.findById(req.user._id)
-        .select("+password");
-
-    if (!user) {
-        return next(new AppError("User not found", 404));
-    }
+    const user = await getUserById(
+        req.user._id,
+        "+password"
+    );
 
     // Check current password
     const isMatch = await user.correctPassword(currentPassword);
 
     if (!isMatch) {
         return next(
-            new AppError("Current password is incorrect", 400)
+            new AppError(
+                "Current password is incorrect",
+                401
+            )
         );
     }
 
@@ -135,15 +158,15 @@ export const changePassword = asyncHandler(async (req, res, next) => {
 // @access  Private
 // ======================================================
 
-export const deleteMe = asyncHandler(async (req, res, next) => {
+export const deleteMe = asyncHandler(async (req, res) => {
 
     await User.findByIdAndUpdate(req.user._id, {
         isDeleted: true
     });
 
-    res.status(204).json({
+    res.status(200).json({
         success: true,
-        data: null
+        message: 'User deleted successfully'
     });
 });
 
@@ -154,40 +177,28 @@ export const deleteMe = asyncHandler(async (req, res, next) => {
 // @access  Private
 // ======================================================
 
-export const addAddress = asyncHandler(async (req, res, next) => {
+export const addAddress = asyncHandler(async (req, res) => {
 
-    const {
-        label,
-        city,
-        street,
-        building,
-        notes,
-        phoneNumber,
-        isDefault
-    } = req.body;
+    const user = await getUserById(req.user._id);
 
-    const user = await User.findById(req.user._id);
+    const addressData = filterObj(req.body, [
+        "label",
+        "city",
+        "street",
+        "building",
+        "notes",
+        "phoneNumber",
+        "isDefault"
+    ]);
 
-    if (!user) {
-        return next(new AppError("User not found", 404));
-    }
-
-    // Remove old default
-    if (isDefault) {
+    // Remove old default address
+    if (addressData.isDefault) {
         user.addresses.forEach((address) => {
             address.isDefault = false;
         });
     }
 
-    user.addresses.push({
-        label,
-        city,
-        street,
-        building,
-        notes,
-        phoneNumber,
-        isDefault
-    });
+    user.addresses.push(addressData);
 
     await user.save();
 
@@ -199,187 +210,202 @@ export const addAddress = asyncHandler(async (req, res, next) => {
 
 
 // ======================================================
-// @desc    update address
-// @route   PUT /api/users/address
+// @desc    Update address
+// @route   PUT /api/users/address/:id
 // @access  Private
 // ======================================================
 
 export const updateAddress = asyncHandler(async (req, res, next) => {
 
-    const {
-        label,
-        city,
-        street,
-        building,
-        notes,
-        phoneNumber,
-        isDefault
-    } = req.body;
+    const user = await getUserById(req.user._id);
 
-    const user = await User.findById(req.user._id);
+    const address = user.addresses.id(req.params.id);
 
-    if (!user) {
-        return next(new AppError("User not found", 404));
+    if (!address) {
+        return next(
+            new AppError(ADDRESS_NOT_FOUND, 404)
+        );
     }
 
-    user.addresses.forEach((address) => {
-        if (address._id.toString() === req.params.id) {
-            address.label = label;
-            address.city = city;
-            address.street = street;
-            address.building = building;
-            address.notes = notes;
-            address.phoneNumber = phoneNumber;
-            address.isDefault = isDefault;
-        }
-    });
+    const addressData = filterObj(req.body, [
+        "label",
+        "city",
+        "street",
+        "building",
+        "notes",
+        "phoneNumber",
+        "isDefault"
+    ]);
+
+    // Remove old default address
+    if (addressData.isDefault) {
+        user.addresses.forEach((addr) => {
+            addr.isDefault = false;
+        });
+    }
+
+    // Update address
+    Object.assign(address, addressData);
 
     await user.save();
 
     res.status(200).json({
         success: true,
         data: user.addresses
-    })
+    });
 });
 
-    // ======================================================
-    // @desc    Delete address
-    // @route   DELETE /api/users/address/:id
-    // @access  Private
-    // ======================================================
 
-    export const deleteAddress = asyncHandler(async (req, res, next) => {
+// ======================================================
+// @desc    Delete address
+// @route   DELETE /api/users/address/:id
+// @access  Private
+// ======================================================
 
-        const user = await User.findById(req.user._id);
+export const deleteAddress = asyncHandler(async (req, res, next) => {
 
-        if (!user) {
-            return next(new AppError("User not found", 404));
-        }
+    const user = await getUserById(req.user._id);
 
-        user.addresses = user.addresses.filter(
-            (address) => address._id.toString() !== req.params.id
+    const address = user.addresses.id(req.params.id);
+
+    if (!address) {
+        return next(
+            new AppError(ADDRESS_NOT_FOUND, 404)
         );
+    }
 
-        await user.save();
+    user.addresses.pull(req.params.id);
 
-        res.status(200).json({
-            success: true,
-            message: "Address deleted successfully",
-            data: user.addresses
-        });
+    await user.save();
+
+    res.status(200).json({
+        success: true,
+        message: "Address deleted successfully",
+        data: user.addresses
     });
+});
 
 
-    // ======================================================
-    // @desc    Get all users
-    // @route   GET /api/users
-    // @access  Admin
-    // ======================================================
+// ======================================================
+// @desc    Get all users
+// @route   GET /api/users
+// @access  Admin
+// ======================================================
 
-    export const getAllUsers = asyncHandler(async (req, res, next) => {
+export const getAllUsers = asyncHandler(async (req, res) => {
 
-        const features = new APIFeatures(
-            User.find({ isDeleted: false }),
-            req.query
-        )
-            .filter()
-            .sort()
-            .limitFields()
-            .paginate();
+    const features = new APIFeatures(
+        User.find({ isDeleted: false })
+            .select("-password"),
+        req.query
+    )
+        .filter()
+        .sort()
+        .limitFields()
+        .paginate();
 
-        const users = await features.query;
+    const users = await features.query;
 
-        res.status(200).json({
-            success: true,
-            results: users.length,
-            data: users
-        });
+    res.status(200).json({
+        success: true,
+        results: users.length,
+        data: users
     });
+});
 
 
-    // ======================================================
-    // @desc    Get single user
-    // @route   GET /api/users/:id
-    // @access  Admin
-    // ======================================================
+// ======================================================
+// @desc    Get single user
+// @route   GET /api/users/:id
+// @access  Admin
+// ======================================================
 
-    export const getUser = asyncHandler(async (req, res, next) => {
+export const getUser = asyncHandler(async (req, res) => {
 
-        const user = await User.findById(req.params.id);
+    const user = await getUserById(req.params.id);
 
-        if (!user || user.isDeleted) {
-            return next(new AppError("User not found", 404));
-        }
-
-        res.status(200).json({
-            success: true,
-            data: user
-        });
+    res.status(200).json({
+        success: true,
+        data: user
     });
+});
 
 
-    // ======================================================
-    // @desc    Update user by admin
-    // @route   PUT /api/users/:id
-    // @access  Admin
-    // ======================================================
+// ======================================================
+// @desc    Update user by admin
+// @route   PUT /api/users/:id
+// @access  Admin
+// ======================================================
 
-    export const updateUser = asyncHandler(async (req, res, next) => {
+export const updateUser = asyncHandler(async (req, res, next) => {
 
-        // Prevent password updates here
-        if (req.body.password) {
-            return next(
-                new AppError(
-                    "This route is not for password updates",
-                    400
-                )
-            );
-        }
-
-        const updatedUser = await User.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            {
-                new: true,
-                runValidators: true
-            }
+    // Prevent password updates
+    if (req.body.password || req.body.newPassword) {
+        return next(
+            new AppError(
+                "This route is not for password updates",
+                400
+            )
         );
+    }
 
-        if (!updatedUser) {
-            return next(new AppError("User not found", 404));
+    // Allowed fields only
+    const filteredBody = filterObj(req.body, [
+        "name",
+        "email",
+        "phone",
+        "gender",
+        "role"
+    ]);
+
+    const updatedUser = await User.findByIdAndUpdate(
+        req.params.id,
+        filteredBody,
+        {
+            new: true,
+            runValidators: true
         }
+    ).select("-password");
 
-        res.status(200).json({
-            success: true,
-            data: updatedUser
-        });
-    });
-
-
-    // ======================================================
-    // @desc    Soft delete user by admin
-    // @route   DELETE /api/users/:id
-    // @access  Admin
-    // ======================================================
-
-    export const deleteUser = asyncHandler(async (req, res, next) => {
-
-        const user = await User.findByIdAndUpdate(
-            req.params.id,
-            {
-                isDeleted: true
-            },
-            {
-                new: true
-            }
+    if (!updatedUser || updatedUser.isDeleted) {
+        return next(
+            new AppError(USER_NOT_FOUND, 404)
         );
+    }
 
-        if (!user) {
-            return next(new AppError("User not found", 404));
-        }
-
-        res.status(200).json({
-            success: true,
-            message: "User deleted successfully"
-        });
+    res.status(200).json({
+        success: true,
+        data: updatedUser
     });
+});
+
+
+// ======================================================
+// @desc    Soft delete user by admin
+// @route   DELETE /api/users/:id
+// @access  Admin
+// ======================================================
+
+export const deleteUser = asyncHandler(async (req, res, next) => {
+
+    const user = await User.findByIdAndUpdate(
+        req.params.id,
+        {
+            isDeleted: true
+        },
+        {
+            new: true
+        }
+    );
+
+    if (!user) {
+        return next(
+            new AppError(USER_NOT_FOUND, 404)
+        );
+    }
+
+    res.status(200).json({
+        success: true,
+        message: "User deleted successfully"
+    });
+});

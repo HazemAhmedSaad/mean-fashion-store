@@ -2,13 +2,14 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import corsMiddlewares from './middlewares/cors.middlewares.js';
+import corsMiddlewares from './middlewares/cors.middleware.js';
 import AppError from './utils/appError.js';
 import globalErrorHandler from './middlewares/errorHandler.middleware.js';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 // استيراد المسارات (Routes)
 import authRoutes from "./routes/auth.routes.js";
+import userRoutes from "./routes/user.routes.js";
 // import productRoutes from './routes/product.routes.js';
 
 // 1. تحميل متغيرات البيئة (Environment Variables)
@@ -34,6 +35,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // 3. Mounting Routes
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/users', userRoutes);
 // app.use('/api/v1/products', productRoutes);
 // app.use('/api/v1/orders', orderRoutes);
 

@@ -1,19 +1,22 @@
 import express from "express";
 
-import { protect } from './../middlewares/authentication.middleware.js';
-import { restrictTo as authorize } from './../middlewares/authorization.middleware.js';
+import { protect } from "../middlewares/authentication.middleware.js";
+import { restrictTo as authorize } from "../middlewares/authorization.middleware.js";
 
 import {
     getMe,
     updateMe,
+    deleteMe,
     changePassword,
     addAddress,
+    updateAddress,
     deleteAddress,
     getAllUsers,
     getUser,
     updateUser,
     deleteUser
 } from "../controllers/user.controller.js";
+
 const router = express.Router();
 
 
@@ -25,48 +28,30 @@ router.use(protect);
 
 
 // ======================================
-// Current User
+// Current User Routes
 // ======================================
 
-router.get(
-    "/me",
-    getMe
-);
+router.route("/me")
+    .get(getMe)
+    .patch(updateMe)
+    .delete(deleteMe);
 
 router.patch(
-    "/updateMe",
-    updateMe
-);
-
-router.patch(
-    "/changeMyPassword",
+    "/me/password",
     changePassword
 );
 
-router.delete(
-    "/deleteMe",
-    deleteUser
-);
-
 
 // ======================================
-// Addresses
+// Address Routes
 // ======================================
 
-router.post(
-    "/address",
-    addAddress
-);
+router.route("/addresses")
+    .post(addAddress);
 
-router.patch(
-    "/address/:id",
-    addAddress
-);
-
-router.delete(
-    "/address/:id",
-    deleteAddress
-);
+router.route("/addresses/:id")
+    .patch(updateAddress)
+    .delete(deleteAddress);
 
 
 // ======================================

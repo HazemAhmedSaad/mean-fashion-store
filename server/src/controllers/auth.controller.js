@@ -6,12 +6,12 @@ import AppError from '../utils/appError.js';
 // وظيفة مساعدة لتوليد التوكن
 const signToken = (user) => {
     return jwt.sign({
-        _id: user._id,
+        id: user._id,
         name: user.name,
         phone: user.phone,
         email: user.email,
         role: user.role
-    }, process.env.JWT_SECRET_key, {
+    }, process.env.JWT_SECRET_KEY, {
         expiresIn: process.env.JWT_EXPIRES_IN
     });
 };
