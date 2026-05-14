@@ -12,6 +12,7 @@ import {
     updateAddress,
     deleteAddress,
     getAllUsers,
+    getDeletedUsers,
     getUser,
     updateUser,
     deleteUser
@@ -62,6 +63,9 @@ router.use(authorize("admin"));
 
 router.route("/")
     .get(getAllUsers);
+
+router.route("/deleted")
+    .get(getDeletedUsers);
 
 router.route("/:id")
     .get(getUser)

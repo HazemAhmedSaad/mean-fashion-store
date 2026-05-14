@@ -58,7 +58,6 @@ export const login = asyncHandler(async (req, res, next) => {
     const { phone, password } = req.body;
 
     if (!phone || !password) {
-
         return next(
             new AppError(
                 "Please provide phone and password",
@@ -68,13 +67,33 @@ export const login = asyncHandler(async (req, res, next) => {
     }
 
     const user = await User.findOne({ phone })
-        .select("+password");
+        .select("+password +isDeleted");
 
-    if (
-        !user ||
-        !(await user.correctPassword(password, user.password))
-    ) {
+    // check user exists
+    if (!user) {
+        return next(
+            new AppError(
+                "Invalid phone or password",
+                401
+            )
+        );
+    }
 
+    // check soft delete
+    if (user.isDeleted) {
+        return next(
+            new AppError(
+                "This account has been deleted",
+                403
+            )
+        );
+    }
+
+    // check password
+    const isCorrectPassword =
+        await user.correctPassword(password, user.password);
+
+    if (!isCorrectPassword) {
         return next(
             new AppError(
                 "Invalid phone or password",

@@ -28,7 +28,8 @@ const userSchema = new mongoose.Schema(
         password: {
             type: String,
             required: true,
-            minlength: [8, "Password must be at least 8 characters long"]
+            minlength: [8, "Password must be at least 8 characters long"],
+            select: false
         },
         gender: {
             type: String,
@@ -73,7 +74,6 @@ const userSchema = new mongoose.Schema(
 
 userSchema.pre("save", async function () {
     if (!this.isModified("password")) return;
-
     this.password = await bcrypt.hash(this.password, 12);
 });
 

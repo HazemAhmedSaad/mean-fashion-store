@@ -64,6 +64,32 @@ class APIFeatures {
 
         return this;
     }
+    limitFields() {
+
+        if (this.queryString.fields) {
+
+            const excludedFields = [
+                'password',
+                '__v'
+            ];
+
+            const fields = this.queryString.fields
+                .split(',')
+                .filter(field => !excludedFields.includes(field))
+                .join(' ');
+
+            this.query = this.query.select(fields);
+
+        } else {
+
+            this.query = this.query.select('-__v');
+
+        }
+
+        return this;
+    }
 }
+
+
 
 export default APIFeatures;

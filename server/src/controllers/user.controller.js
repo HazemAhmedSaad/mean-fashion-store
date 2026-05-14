@@ -35,7 +35,7 @@ const filterObj = (obj, allowedFields) => {
 
 const getUserById = async (id, select = "") => {
 
-    const user = await User.findById(id).select("+isDeleted")
+    const user = await User.findById(id).select("+isDeleted -__v ");
     if (!user || user.isDeleted) {
         throw new AppError(USER_NOT_FOUND, 404);
     }
@@ -191,11 +191,18 @@ export const addAddress = asyncHandler(async (req, res) => {
         "isDefault"
     ]);
 
-    // Remove old default address
-    if (addressData.isDefault) {
+    // first address should be default
+    if (user.addresses.length === 0) {
+        addressData.isDefault = true;
+    }
+
+    // if user selected new default address
+    if (addressData.isDefault === true) {
+
         user.addresses.forEach((address) => {
             address.isDefault = false;
         });
+
     }
 
     user.addresses.push(addressData);
@@ -206,6 +213,7 @@ export const addAddress = asyncHandler(async (req, res) => {
         success: true,
         data: user.addresses
     });
+
 });
 
 
@@ -238,10 +246,13 @@ export const updateAddress = asyncHandler(async (req, res, next) => {
     ]);
 
     // Remove old default address
-    if (addressData.isDefault) {
+    if (addressData.isDefault === true) {
         user.addresses.forEach((addr) => {
             addr.isDefault = false;
         });
+    }
+    else {
+        delete addressData.isDefault; // prevent unsetting default if not provided
     }
 
     // Update address
@@ -261,7 +272,6 @@ export const updateAddress = asyncHandler(async (req, res, next) => {
 // @route   DELETE /api/users/address/:id
 // @access  Private
 // ======================================================
-
 export const deleteAddress = asyncHandler(async (req, res, next) => {
 
     const user = await getUserById(req.user._id);
@@ -274,7 +284,17 @@ export const deleteAddress = asyncHandler(async (req, res, next) => {
         );
     }
 
+    const wasDefault = address.isDefault;
+
+    // delete address
     user.addresses.pull(req.params.id);
+
+    // if deleted address was default
+    if (wasDefault && user.addresses.length > 0) {
+
+        // make first address default
+        user.addresses[0].isDefault = true;
+    }
 
     await user.save();
 
@@ -283,6 +303,7 @@ export const deleteAddress = asyncHandler(async (req, res, next) => {
         message: "Address deleted successfully",
         data: user.addresses
     });
+
 });
 
 
@@ -294,25 +315,59 @@ export const deleteAddress = asyncHandler(async (req, res, next) => {
 
 export const getAllUsers = asyncHandler(async (req, res) => {
 
+    const totalDocuments = await User.countDocuments({
+        isDeleted: { $ne: true }
+    });
+
     const features = new APIFeatures(
-        User.find({ isDeleted: false })
-            .select("-password"),
+        User.find(),
         req.query
     )
         .filter()
         .sort()
         .limitFields()
-        .paginate();
-
+        .paginate(totalDocuments);
     const users = await features.query;
 
     res.status(200).json({
         success: true,
         results: users.length,
+        pagination: features.pagination,
         data: users
     });
+
 });
 
+// ======================================================
+// @desc    Get deleted users
+// @route   GET /api/users/deleted
+// @access  Admin
+// ======================================================
+
+export const getDeletedUsers = asyncHandler(async (req, res) => {
+
+    const totalDocuments = await User.countDocuments({
+        isDeleted: true
+    });
+
+    const features = new APIFeatures(
+        User.find({ isDeleted: true }).select("+isDeleted"),
+        req.query
+    )
+        .filter()
+        .sort()
+        .limitFields()
+        .paginate(totalDocuments);
+    const users = await features.query.select("+isDeleted");
+
+    res.status(200).json({
+        success: true,
+        results: users.length,
+        pagination: features.pagination,
+        data: users
+    });
+
+});
 
 // ======================================================
 // @desc    Get single user
@@ -339,8 +394,10 @@ export const getUser = asyncHandler(async (req, res) => {
 
 export const updateUser = asyncHandler(async (req, res, next) => {
 
+    const body = req.body || {};
+
     // Prevent password updates
-    if (req.body.password || req.body.newPassword) {
+    if (body.password || body.newPassword) {
         return next(
             new AppError(
                 "This route is not for password updates",
@@ -349,14 +406,25 @@ export const updateUser = asyncHandler(async (req, res, next) => {
         );
     }
 
-    // Allowed fields only
-    const filteredBody = filterObj(req.body, [
+    const filteredBody = filterObj(body, [
         "name",
-        "email",
         "phone",
+        "email",
         "gender",
-        "role"
+        "addresses",
+        "role",
+        "isActive",
+        "isDeleted"
     ]);
+
+    if (Object.keys(filteredBody).length === 0) {
+        return next(
+            new AppError(
+                "Please provide at least one field to update",
+                400
+            )
+        );
+    }
 
     const updatedUser = await User.findByIdAndUpdate(
         req.params.id,
@@ -365,9 +433,8 @@ export const updateUser = asyncHandler(async (req, res, next) => {
             new: true,
             runValidators: true
         }
-    ).select("-password");
-
-    if (!updatedUser || updatedUser.isDeleted) {
+    ).select('+isDeleted -__v');
+    if (!updatedUser) {
         return next(
             new AppError(USER_NOT_FOUND, 404)
         );
