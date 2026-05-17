@@ -67,7 +67,7 @@ export const login = asyncHandler(async (req, res, next) => {
     }
 
     const user = await User.findOne({ phone })
-        .select("+password +isDeleted");
+        .select("+password +isBlocked +isDeleted");
 
     // check user exists
     if (!user) {
@@ -79,7 +79,17 @@ export const login = asyncHandler(async (req, res, next) => {
         );
     }
 
-    // check soft delete
+    // check blocked account
+    if (user.isBlocked) {
+        return next(
+            new AppError(
+                "This account has been blocked",
+                403
+            )
+        );
+    }
+
+    // check soft deleted account
     if (user.isDeleted) {
         return next(
             new AppError(

@@ -10,7 +10,9 @@ import connectDB from './config/db.js';
 // استيراد المسارات (Routes)
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
-// import productRoutes from './routes/product.routes.js';
+import productRoutes from './routes/product.routes.js';
+import categoryRoutes from "./routes/category.routes.js";
+import subCategoryRoutes from "./routes/subCategory.routes.js";
 
 // 1. تحميل متغيرات البيئة (Environment Variables)
 dotenv.config();
@@ -36,7 +38,9 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // 3. Mounting Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
-// app.use('/api/v1/products', productRoutes);
+app.use('/api/v1/products', productRoutes);
+app.use('/api/v1/categories', categoryRoutes);
+app.use('/api/v1/sub-categories', subCategoryRoutes);
 // app.use('/api/v1/orders', orderRoutes);
 
 

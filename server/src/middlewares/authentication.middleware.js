@@ -37,7 +37,7 @@ export const protect = asyncHandler(async (req, res, next) => {
   );
 
   // Find current user
-  const currentUser = await User.findById(decoded.id);
+  const currentUser = await User.findById(decoded.id).select("+isBlocked +isDeleted");
 
   // User no longer exists
   if (!currentUser) {
@@ -49,7 +49,17 @@ export const protect = asyncHandler(async (req, res, next) => {
     );
   }
 
-  // Check soft delete
+  // Check blocked account
+  if (currentUser.isBlocked) {
+    return next(
+      new AppError(
+        "This account has been blocked",
+        401
+      )
+    );
+  }
+
+  // Check soft deleted account
   if (currentUser.isDeleted) {
     return next(
       new AppError(

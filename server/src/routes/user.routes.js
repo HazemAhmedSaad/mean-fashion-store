@@ -13,9 +13,9 @@ import {
     deleteAddress,
     getAllUsers,
     getDeletedUsers,
+    getBlockedUsers,
     getUser,
-    updateUser,
-    deleteUser
+    updateUser
 } from "../controllers/user.controller.js";
 
 const router = express.Router();
@@ -64,13 +64,15 @@ router.use(authorize("admin"));
 router.route("/")
     .get(getAllUsers);
 
+router.route("/blocked")
+    .get(getBlockedUsers);
+
 router.route("/deleted")
     .get(getDeletedUsers);
 
 router.route("/:id")
     .get(getUser)
     .patch(updateUser)
-    .delete(deleteUser);
 
 
 export default router;

@@ -35,11 +35,12 @@ const filterObj = (obj, allowedFields) => {
 
 const getUserById = async (id, select = "") => {
 
-    const user = await User.findById(id).select("+isDeleted -__v ");
-    if (!user || user.isDeleted) {
+    const user = await User.findById(id).select(`+isBlocked +isDeleted -__v ${select}`);
+    if (!user || user.isBlocked || user.isDeleted) {
         throw new AppError(USER_NOT_FOUND, 404);
     }
     // remove sensitive fields
+    user.isBlocked = undefined;
     user.isDeleted = undefined;
     return user;
 };
@@ -92,7 +93,7 @@ export const updateMe = asyncHandler(async (req, res, next) => {
         req.user._id,
         filteredBody,
         {
-            new: true,
+            returnDocument: 'after',
             runValidators: true
         }
     ).select("-password");
@@ -316,11 +317,15 @@ export const deleteAddress = asyncHandler(async (req, res, next) => {
 export const getAllUsers = asyncHandler(async (req, res) => {
 
     const totalDocuments = await User.countDocuments({
+        isBlocked: { $ne: true },
         isDeleted: { $ne: true }
     });
 
     const features = new APIFeatures(
-        User.find(),
+        User.find({
+            isBlocked: { $ne: true },
+            isDeleted: { $ne: true }
+        }),
         req.query
     )
         .filter()
@@ -370,6 +375,37 @@ export const getDeletedUsers = asyncHandler(async (req, res) => {
 });
 
 // ======================================================
+// @desc    Get blocked users
+// @route   GET /api/users/blocked
+// @access  Admin
+// ======================================================
+
+export const getBlockedUsers = asyncHandler(async (req, res) => {
+
+    const totalDocuments = await User.countDocuments({
+        isBlocked: true
+    });
+
+    const features = new APIFeatures(
+        User.find({ isBlocked: true }).select("+isBlocked"),
+        req.query
+    )
+        .filter()
+        .sort()
+        .limitFields()
+        .paginate(totalDocuments);
+    const users = await features.query.select("+isBlocked");
+
+    res.status(200).json({
+        success: true,
+        results: users.length,
+        pagination: features.pagination,
+        data: users
+    });
+
+});
+
+// ======================================================
 // @desc    Get single user
 // @route   GET /api/users/:id
 // @access  Admin
@@ -407,14 +443,8 @@ export const updateUser = asyncHandler(async (req, res, next) => {
     }
 
     const filteredBody = filterObj(body, [
-        "name",
-        "phone",
-        "email",
-        "gender",
-        "addresses",
         "role",
-        "isActive",
-        "isDeleted"
+        "isBlocked",
     ]);
 
     if (Object.keys(filteredBody).length === 0) {
@@ -430,11 +460,11 @@ export const updateUser = asyncHandler(async (req, res, next) => {
         req.params.id,
         filteredBody,
         {
-            new: true,
+            returnDocument: 'after',
             runValidators: true
         }
-    ).select('+isDeleted -__v');
-    if (!updatedUser) {
+    ).select('+isBlocked +isDeleted -__v');
+        if (!updatedUser) {
         return next(
             new AppError(USER_NOT_FOUND, 404)
         );
@@ -447,32 +477,5 @@ export const updateUser = asyncHandler(async (req, res, next) => {
 });
 
 
-// ======================================================
-// @desc    Soft delete user by admin
-// @route   DELETE /api/users/:id
-// @access  Admin
-// ======================================================
 
-export const deleteUser = asyncHandler(async (req, res, next) => {
 
-    const user = await User.findByIdAndUpdate(
-        req.params.id,
-        {
-            isDeleted: true
-        },
-        {
-            new: true
-        }
-    );
-
-    if (!user) {
-        return next(
-            new AppError(USER_NOT_FOUND, 404)
-        );
-    }
-
-    res.status(200).json({
-        success: true,
-        message: "User deleted successfully"
-    });
-});

@@ -59,15 +59,17 @@ const userSchema = new mongoose.Schema(
             default: "user",
         },
 
-        isActive: {
+        isBlocked: {
             type: Boolean,
-            default: true
+            default: false,
+            select: false
         },
         isDeleted: {
             type: Boolean,
             default: false,
             select: false
-        }
+        },
+
     },
     { timestamps: true }
 );
