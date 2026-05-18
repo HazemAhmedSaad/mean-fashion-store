@@ -18,9 +18,9 @@ const productSchema = new mongoose.Schema(
     categoryId: { type: mongoose.Schema.Types.ObjectId, ref: "Category" },
     subCategoryId: { type: mongoose.Schema.Types.ObjectId, ref: "SubCategory" },
     isActive: { type: Boolean, default: true }, // للمنتجات الموسمية
-    isDeleted: { type: Boolean, default: false },
+    isDeleted: { type: Boolean, default: false ,select: false} // للحذف المنطقي,
   },
-  { timestamps: true },
+  { timestamps: true, versionKey: false },
 );
 
 // productSchema.pre("save", function () {
