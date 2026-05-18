@@ -46,7 +46,7 @@ export const getAllSubCategories = asyncHandler(async (req, res) => {
   const totalDocuments = await SubCategory.countDocuments(baseFilter);
 
   const features = new APIFeatures(
-    SubCategory.find(baseFilter).select("-__v -isDeleted").populate("categoryId", "title"),
+    SubCategory.find(baseFilter).populate("categoryId", "title"),
     req.query,
   )
     .filter()
@@ -124,7 +124,7 @@ export const updateSubCategory = asyncHandler(async (req, res, next) => {
       new: true,
       runValidators: true,
     },
-  ).select("-__v -isDeleted");
+  );
 
   if (!subCategory) return next(new AppError(SUB_CATEGORY_NOT_FOUND, 404));
 

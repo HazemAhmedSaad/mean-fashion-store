@@ -12,8 +12,8 @@ const subCategorySchema = new mongoose.Schema(
   },
   {
     versionKey: false, // يخفي __v
+    timestamps: true,
   },
-  { timestamps: true },
 );
 
 export default mongoose.model("SubCategory", subCategorySchema);

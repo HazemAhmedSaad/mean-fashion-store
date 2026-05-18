@@ -7,8 +7,8 @@ const categorySchema = new mongoose.Schema(
   },
   {
     versionKey: false,
+    timestamps: true,
   },
-  { timestamps: true },
 );
 
 export default mongoose.model("Category", categorySchema);
