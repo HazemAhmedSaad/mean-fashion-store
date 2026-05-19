@@ -8,6 +8,6 @@ const cartSchema = new mongoose.Schema({
         isPriceChanged: { type: Boolean, default: false } // فلاج للتنبيه في الـ UI[cite: 1]
     }],
     totalPrice: { type: Number, default: 0 }
-}, { timestamps: true });
+}, { timestamps: true, versionKey: false });
 
 export default mongoose.model("Cart", cartSchema);
