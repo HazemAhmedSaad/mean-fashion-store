@@ -8,7 +8,37 @@
   "projects": {
     "app": {
       "projectType": "application",
-      "schematics": {},
+      "schematics": {
+          "@schematics/angular:component": {
+            "type": "component"
+          },
+          "@schematics/angular:directive": {
+            "type": "directive"
+          },
+          "@schematics/angular:pipe": {
+            "type": "pipe"
+          },
+          "@schematics/angular:class": {
+            "type": "class"
+          },
+          "@schematics/angular:guard": {
+            "type": "guard"
+          },
+          "@schematics/angular:interface": {
+            "type": "interface"
+          },
+          "@schematics/angular:module": {
+            "type": "module"
+          },
+          "@schematics/angular:service": {
+            "type": "service"
+          },
+          "@schematics/angular:interceptor": {
+            "type": "interceptor"
+            
+          }
+
+      },
       "root": "",
       "sourceRoot": "src",
       "prefix": "app",
