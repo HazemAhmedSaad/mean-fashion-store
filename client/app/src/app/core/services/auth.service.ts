@@ -1,21 +1,59 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+
+import { environment } from '../../../environments/environment';
+import { AuthResponse } from '../models/auth.interface';
 
 interface JwtPayload {
+  id?: string;
+  name?: string;
+  phone?: string;
+  email?: string;
   role?: string;
   exp?: number;
+}
+
+export interface SignupRequest {
+  name: string;
+  phone: string;
+  email?: string;
+  password: string;
+}
+
+export interface LoginRequest {
+  phone: string;
+  password: string;
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private readonly TOKEN_KEY = 'authToken';
+  private readonly API_URL = `${environment.apiUrl}/auth`;
+  private readonly TOKEN_KEY = 'token';
 
   private token: string | null = null;
 
-  constructor() {
+  constructor(private http: HttpClient) {
     this.loadToken();
   }
+
+  // ========================
+  // API Methods
+  // ========================
+
+  signup(data: SignupRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.API_URL}/signup`, data);
+  }
+
+  login(data: LoginRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.API_URL}/login`, data);
+  }
+
+  // ========================
+  // Token Management
+  // ========================
 
   private loadToken(): void {
     this.token = localStorage.getItem(this.TOKEN_KEY);
@@ -48,6 +86,14 @@ export class AuthService {
   getRole(): string | null {
     const payload = this.decodeToken();
     return payload?.role || null;
+  }
+
+  isAdmin(): boolean {
+    return this.getRole() === 'admin';
+  }
+
+  getUserFromToken(): JwtPayload | null {
+    return this.decodeToken();
   }
 
   private decodeToken(): JwtPayload | null {

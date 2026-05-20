@@ -21,4 +21,14 @@ export interface Testimonial {
 export interface singleTestimonialResponse {
     success: boolean
     data: Testimonial
+}export interface CreateTestimonialRequest {
+    name: string;
+    phone: string;
+    comment: string;
+    stars?: number;
+}
+
+export interface UpdateTestimonialRequest {
+    status?: 'pending' | 'approved' | 'rejected';
+    isVisible?: boolean;
 }

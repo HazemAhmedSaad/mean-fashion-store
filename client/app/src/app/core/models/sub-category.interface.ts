@@ -25,3 +25,14 @@ export interface singleSubCategoryResponse {
     success: boolean
     data: SubCategory
 }
+export interface CreateSubCategoryRequest {
+    title: string;
+    categoryId: string;
+    isActive?: boolean;
+}
+
+export interface UpdateSubCategoryRequest {
+    title?: string;
+    categoryId?: string;
+    isActive?: boolean;
+}
