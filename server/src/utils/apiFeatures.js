@@ -22,12 +22,6 @@ class APIFeatures {
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
 
     const parsedQuery = JSON.parse(queryStr);
-    parsedQuery.isDeleted = false; // استبعاد المحذوفين دائماً
-
-    // 🔥 وظيفة سحرية لتحويل أي نص رقمي (مثل "200") إلى رقم حقيقي (200) لمنع مشاكل الـ Casting
-    if (!this.query.model?.schema?.path("isDeleted")) {
-      delete parsedQuery.isDeleted;
-    }
 
     this._castStringsToNumbers(parsedQuery);
 

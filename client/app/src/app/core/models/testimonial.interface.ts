@@ -1,1 +1,24 @@
-export interface Testimonial {}
+import { Pagination } from "./pagination.interface"
+
+export interface TestimonialsResponse {
+    success: boolean
+    results: number
+    pagination: Pagination
+    data: Testimonial[]
+}
+
+
+export interface Testimonial {
+    _id: string;
+    name: string;
+    phone: string;
+    comment: string;
+    stars: number;
+    status: 'pending' | 'approved' | 'rejected';
+    isVisible: boolean;
+}
+
+export interface singleTestimonialResponse {
+    success: boolean
+    data: Testimonial
+}

@@ -1,1 +1,4 @@
-export interface Auth {}
+export interface AuthResponse {
+    success: boolean;
+    token: string;
+}
