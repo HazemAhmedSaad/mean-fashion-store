@@ -6,20 +6,17 @@ import { AuthService } from '../services/auth.service';
 export const roleGuard: CanActivateFn = (route) => {
   const auth = inject(AuthService);
   const router = inject(Router);
+  const expectedRole = route.data['expectedRole'] as string;
 
-  const expectedRole = route.data['role'];
-  const user = auth.currentUser();
-
-  // لو مش عامل login
-  if (!user) {
-    return router.createUrlTree(['/login']);
+  if (!auth.isAuthenticated()) {
+    router.navigate(['/login']);
+    return false;
   }
 
-  // لو الـ role صح
-  if (user.role === expectedRole) {
-    return true;
+  if (auth.getRole() !== expectedRole) {
+    router.navigate(['/login']);
+    return false;
   }
 
-  // لو role غلط
-  return router.createUrlTree(['/']);
+  return true;
 };
