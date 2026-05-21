@@ -1,1 +1,189 @@
-<p>category-control works!</p>
+<div class="dashboard-container">
+  <!-- Toast Notification -->
+  <div class="toast-container" *ngIf="toastMessage">
+    <div class="toast show">
+      {{ toastMessage }}
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-titles">
+      <h2>Categories & Sub-Categories</h2>
+      <p>Manage your store taxonomy and product organization</p>
+    </div>
+    <div class="header-actions">
+      <div class="search-input">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="Search categories..." [(ngModel)]="searchQuery" (keyup)="onSearchInput($event)">
+      </div>
+      <button class="btn btn-primary" (click)="openCreateDrawer()">
+        <i class="fa-solid fa-plus"></i> Add Category
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-cards">
+    <div class="summary-card category-card">
+      <div class="card-icon"><i class="fa-solid fa-folder-tree"></i></div>
+      <div class="card-value">{{ totalCategoriesCount }}</div>
+      <div class="card-label">Total Categories</div>
+    </div>
+    <div class="summary-card subcategory-card">
+      <div class="card-icon"><i class="fa-solid fa-tags"></i></div>
+      <div class="card-value">{{ totalSubCategoriesCount }}</div>
+      <div class="card-label">Total Sub-Categories</div>
+    </div>
+    <div class="summary-card active-card">
+      <div class="card-icon"><i class="fa-regular fa-circle-check"></i></div>
+      <div class="card-value">{{ activeCategoriesCount }}</div>
+      <div class="card-label">Active Categories</div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-container">
+    <div class="table-header-row">
+      <h3 class="table-title">Categories List</h3>
+      <span class="table-count" *ngIf="totalCategories > 0">
+        Showing {{ (page - 1) * limit + 1 }}–{{ (page * limit) > totalCategories ? totalCategories : (page * limit) }} of {{ totalCategories }} categories
+      </span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Slug</th>
+          <th>Sub-Cats</th>
+          <th>Products</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let category of categories" (click)="openEditDrawer(category, $event)">
+          <td>
+            <div class="category-info">
+              <div class="category-icon-wrapper">
+                <i class="fa-solid fa-folder"></i>
+              </div>
+              <span class="category-title">{{ category.title }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="slug-badge">{{ getSlug(category.title) }}</span>
+          </td>
+          <td>
+            <span class="count-value sub-cats-count">{{ getSubCategoriesCount(category._id) }}</span>
+          </td>
+          <td>
+            <span class="count-value products-count">{{ getProductsCount(category._id) }}</span>
+          </td>
+          <td>
+            <div class="toggle-switch" (click)="toggleActive(category, $event)">
+              <input type="checkbox" [checked]="category.isActive" readonly>
+              <label></label>
+            </div>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button class="action-btn edit-btn" title="Edit Category" (click)="openEditDrawer(category, $event)">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <button class="action-btn delete-btn" title="Delete Category" (click)="confirmDelete(category, $event)">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="!isLoading && categories.length === 0">
+          <td colspan="6" class="text-center py-8">No categories found.</td>
+        </tr>
+        <tr *ngIf="isLoading">
+          <td colspan="6" class="text-center py-8">Loading categories...</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <!-- Pagination -->
+    <div class="pagination-container" *ngIf="totalPages > 1">
+      <div class="pagination-info">
+        Showing {{ (page - 1) * limit + 1 }}-{{ (page * limit) > totalCategories ? totalCategories : (page * limit) }} of {{ totalCategories }}
+      </div>
+      <div class="pagination-controls">
+        <button class="page-btn" [disabled]="page === 1" (click)="changePage(page - 1)">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <ng-container *ngFor="let p of pages">
+          <button class="page-btn" [class.active]="page === p" (click)="changePage(p)">
+            {{ p }}
+          </button>
+        </ng-container>
+        <button class="page-btn" [disabled]="page === totalPages" (click)="changePage(page + 1)">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Drawer Overlay (Create / Edit) -->
+  <div class="drawer-overlay" [class.open]="isDrawerOpen" (click)="closeDrawer()">
+    <div class="drawer-content" (click)="$event.stopPropagation()">
+      <div class="drawer-header">
+        <h3 class="drawer-title">{{ selectedCategory ? 'Edit Category' : 'Add Category' }}</h3>
+        <p class="drawer-subtitle">
+          {{ selectedCategory ? 'Update category name and toggle active status' : 'Create a new category for your shop taxonomy' }}
+        </p>
+        <button class="close-drawer-btn" (click)="closeDrawer()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      
+      <div class="drawer-body">
+        <div class="form-group">
+          <label for="category-title" class="form-label">Category Name</label>
+          <input type="text" id="category-title" class="form-control" placeholder="e.g. Kids, Shoes, Accessories" [(ngModel)]="categoryForm.title">
+        </div>
+        
+        <div class="form-group inline-toggle">
+          <div class="toggle-label-group">
+            <span class="form-label mb-0">Active Status</span>
+            <span class="form-sublabel">Visible on the client shop</span>
+          </div>
+          <div class="toggle-switch">
+            <input type="checkbox" id="category-active" [(ngModel)]="categoryForm.isActive">
+            <label for="category-active"></label>
+          </div>
+        </div>
+      </div>
+      
+      <div class="drawer-footer">
+        <button class="btn btn-outline" (click)="closeDrawer()">Cancel</button>
+        <button class="btn btn-primary" (click)="saveCategory()" [disabled]="isMutating">
+          {{ selectedCategory ? 'Save Changes' : 'Create Category' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Warning Modal -->
+  <div class="modal-overlay" [class.open]="isDeleteModalOpen" (click)="closeDeleteModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-body text-center">
+        <div class="warning-icon-wrapper">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <h3 class="modal-title">Delete Category?</h3>
+        <p class="modal-desc">
+          This will also delete all <strong>{{ subCatsCountToDelete }}</strong> sub-categories and may affect <strong>{{ productsCountToDelete }}</strong> products. This action cannot be undone.
+        </p>
+        
+        <div class="modal-actions">
+          <button class="btn btn-outline w-full" (click)="closeDeleteModal()">Cancel</button>
+          <button class="btn btn-danger w-full" (click)="deleteCategory()" [disabled]="isMutating">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
