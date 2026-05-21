@@ -15,8 +15,9 @@ import { SubCategoryControlComponent } from './features/admin/sub-category-contr
 import { NotFoundComponent } from './features/public/not-found/not-found.component';
 import { ProfileComponent } from './features/public/profile/profile.component';
 import { roleGuard } from './core/guards/role.guard';
+import { authGuard } from './core/guards/auth.guard';
 import { MyOrdersComponent } from './features/public/my-orders/my-orders.component';
-import { TestimonialsComponent } from './features/public/testimonials/testimonials.component';
+import { TestimonialsControlComponent } from './features/admin/testimonials-control/testimonials-control.component';
 
 
 export const routes: Routes = [
@@ -31,7 +32,7 @@ export const routes: Routes = [
             { path: 'products/:slug/:id', component: ProductDetailsComponent },
             { path: 'products/:slug', component: ProductDetailsComponent },
             { path: 'cart', component: CartComponent },
-            { path: 'orders', component: MyOrdersComponent },
+            { path: 'orders', component: MyOrdersComponent, canActivate: [authGuard] },
 
         ]
     },
@@ -46,7 +47,7 @@ export const routes: Routes = [
             { path: 'categories-control', component: CategoryControlComponent },
             { path: 'orders-control', component: OrderControlComponent },
             { path: 'users-control', component: UserControlComponent },
-            { path: 'testimonials-control', component: TestimonialsComponent },
+            { path: 'testimonials-control', component: TestimonialsControlComponent },
             { path: "sub-categories-control", component: SubCategoryControlComponent},
         ]
     },

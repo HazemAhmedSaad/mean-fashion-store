@@ -1,1 +1,94 @@
-<p>my-orders works!</p>
+<main class="orders-page">
+  <section class="orders-hero">
+    <div>
+      <p>Maison Orders</p>
+      <h1>My Orders</h1>
+      <span>Track status, delivery details and order history.</span>
+    </div>
+    <a routerLink="/products">
+      <i class="fa-solid fa-bag-shopping"></i>
+      Continue Shopping
+    </a>
+  </section>
+
+  <section *ngIf="isLoading" class="orders-state">
+    <div class="spinner"></div>
+    <p>Loading your orders...</p>
+  </section>
+
+  <section *ngIf="!isLoading && errorMessage" class="orders-state orders-state--error">
+    <i class="fa-solid fa-circle-exclamation"></i>
+    <h2>Something went wrong</h2>
+    <p>{{ errorMessage }}</p>
+    <button type="button" (click)="loadOrders()">Try Again</button>
+  </section>
+
+  <section *ngIf="!isLoading && !errorMessage && orders.length === 0" class="orders-state orders-state--empty">
+    <i class="fa-solid fa-receipt"></i>
+    <h2>No orders yet</h2>
+    <p>Your future Maison orders will appear here once checkout is complete.</p>
+    <a routerLink="/products">Start Shopping</a>
+  </section>
+
+  <section *ngIf="!isLoading && !errorMessage && orders.length > 0" class="orders-list">
+    <article *ngFor="let order of orders; trackBy: trackById" class="order-card">
+      <header class="order-head">
+        <div>
+          <span class="order-number">Order #{{ order._id.slice(-8).toUpperCase() }}</span>
+          <h2>{{ getItemsCount(order) }} item{{ getItemsCount(order) === 1 ? '' : 's' }}</h2>
+          <p>{{ getOrderDate(order) | date:'mediumDate' }} · EGP {{ order.totalPrice }}</p>
+        </div>
+        <span class="status-pill" [ngClass]="getStatusClass(order.status)">
+          {{ getStatusLabel(order.status) }}
+        </span>
+      </header>
+
+      <div class="order-progress">
+        <div class="progress-step" [class.active]="isStepActive(order, 'pending')">
+          <span><i class="fa-solid fa-check"></i></span>
+          <p>Pending</p>
+        </div>
+        <div class="progress-step" [class.active]="isStepActive(order, 'preparing')">
+          <span><i class="fa-solid fa-shirt"></i></span>
+          <p>Preparing</p>
+        </div>
+        <div class="progress-step" [class.active]="isStepActive(order, 'shipped')">
+          <span><i class="fa-solid fa-truck"></i></span>
+          <p>Shipped</p>
+        </div>
+        <div class="progress-step" [class.active]="isStepActive(order, 'delivered')">
+          <span><i class="fa-solid fa-house-chimney"></i></span>
+          <p>Delivered</p>
+        </div>
+      </div>
+
+      <div class="order-body">
+        <div class="items-list">
+          <div *ngFor="let item of order.items" class="order-item">
+            <img [src]="getProductImage(item.productId.images[0])" [alt]="item.productId.name" />
+            <div>
+              <h3>{{ item.productId.name }}</h3>
+              <p>Qty {{ item.quantity }} · EGP {{ item.priceAtOrderTime }}</p>
+            </div>
+            <strong>EGP {{ item.priceAtOrderTime * item.quantity }}</strong>
+          </div>
+        </div>
+
+        <aside class="shipping-box">
+          <h3>Shipping Details</h3>
+          <p><i class="fa-solid fa-location-dot"></i>{{ order.shippingAddress.addressText }}</p>
+          <p><i class="fa-solid fa-phone"></i>{{ order.shippingAddress.phone }}</p>
+          <button
+            *ngIf="canCancel(order)"
+            type="button"
+            (click)="cancelOrder(order)"
+            [disabled]="cancellingOrderId === order._id"
+          >
+            <i class="fa-solid" [ngClass]="cancellingOrderId === order._id ? 'fa-spinner fa-spin' : 'fa-ban'"></i>
+            {{ cancellingOrderId === order._id ? 'Canceling...' : 'Cancel Order' }}
+          </button>
+        </aside>
+      </div>
+    </article>
+  </section>
+</main>

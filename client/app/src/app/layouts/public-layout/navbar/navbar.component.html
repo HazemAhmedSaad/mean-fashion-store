@@ -26,6 +26,13 @@
           class="border-transparent text-gray-500 hover:text-black hover:border-gray-300 border-b-2 inline-flex items-center px-1 pt-1 text-sm font-medium h-full transition-colors duration-200"
           >Shop</a
         >
+        <a
+          *ngIf="isAuthenticated"
+          routerLink="/orders"
+          routerLinkActive="border-black text-black"
+          class="border-transparent text-gray-500 hover:text-black hover:border-gray-300 border-b-2 inline-flex items-center px-1 pt-1 text-sm font-medium h-full transition-colors duration-200"
+          >Orders</a
+        >
       </div>
 
       <!-- Icons (Search, Wishlist, Cart) -->
@@ -41,17 +48,34 @@
           <i class="fa-regular fa-heart text-lg"></i>
         </button>
         <a
+          *ngIf="isAdmin"
+          routerLink="/admin"
+          routerLinkActive="border-black text-black"
+          class="border-transparent text-gray-500 hover:text-black hover:border-gray-300 border-b-2 inline-flex items-center px-1 pt-1 text-sm font-medium h-full transition-colors duration-200"
+          >Admin</a
+        >
+        <a
+          *ngIf="!isAuthenticated"
           routerLink="/login"
           routerLinkActive="border-black text-black"
           class="border-transparent text-gray-500 hover:text-black hover:border-gray-300 border-b-2 inline-flex items-center px-1 pt-1 text-sm font-medium h-full transition-colors duration-200"
           >Login</a
         >
         <a
+          *ngIf="!isAuthenticated"
           routerLink="/signup"
           routerLinkActive="border-black text-black"
           class="border-transparent text-gray-500 hover:text-black hover:border-gray-300 border-b-2 inline-flex items-center px-1 pt-1 text-sm font-medium h-full transition-colors duration-200"
           >Signup</a
         >
+        <button
+          *ngIf="isAuthenticated"
+          type="button"
+          (click)="logout()"
+          class="border-transparent text-gray-500 hover:text-black hover:border-gray-300 border-b-2 inline-flex items-center px-1 pt-1 text-sm font-medium h-full transition-colors duration-200"
+        >
+          Logout
+        </button>
         <a
           routerLink="/cart"
           class="text-gray-500 hover:text-black transition-colors duration-200 relative transform hover:scale-110"
@@ -112,17 +136,43 @@
         >Shop</a
       >
       <a
+        *ngIf="isAuthenticated"
+        routerLink="/orders"
+        routerLinkActive="bg-gray-50 text-black font-semibold border-black"
+        (click)="toggleMobileMenu()"
+        class="border-transparent text-gray-500 hover:bg-gray-50 hover:text-black block pl-3 pr-4 py-3 border-l-4 text-base font-medium transition-colors"
+        >Orders</a
+      >
+      <a
+        *ngIf="isAdmin"
+        routerLink="/admin"
+        routerLinkActive="bg-gray-50 text-black font-semibold border-black"
+        (click)="toggleMobileMenu()"
+        class="border-transparent text-gray-500 hover:bg-gray-50 hover:text-black block pl-3 pr-4 py-3 border-l-4 text-base font-medium transition-colors"
+        >Admin</a
+      >
+      <a
+        *ngIf="!isAuthenticated"
         routerLink="/login"
         routerLinkActive="border-black text-black"
         class="border-transparent text-gray-500 hover:text-black hover:border-gray-300 border-b-2 inline-flex items-center px-1 pt-1 text-sm font-medium h-full transition-colors duration-200"
         >Login</a
       >
       <a
+        *ngIf="!isAuthenticated"
         routerLink="/signup"
         routerLinkActive="border-black text-black"
         class="border-transparent text-gray-500 hover:text-black hover:border-gray-300 border-b-2 inline-flex items-center px-1 pt-1 text-sm font-medium h-full transition-colors duration-200"
         >Signup</a
       >
+      <button
+        *ngIf="isAuthenticated"
+        type="button"
+        (click)="logout()"
+        class="border-transparent text-gray-500 hover:bg-gray-50 hover:text-black block w-full text-left pl-3 pr-4 py-3 border-l-4 text-base font-medium transition-colors"
+      >
+        Logout
+      </button>
     </div>
     <div class="pt-4 pb-6 border-t border-gray-100 px-4 flex space-x-8 justify-center">
       <button class="text-gray-500 hover:text-black transition-colors">

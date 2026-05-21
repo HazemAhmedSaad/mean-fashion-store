@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { AuthResponse, JwtPayload, LoginRequest, SignupRequest } from '../models/auth.interface';
@@ -16,9 +16,12 @@ export class AuthService {
 
   private token: string | null = null;
   public onAuthSuccess$ = new Subject<void>();
+  private authStateSubject = new BehaviorSubject<boolean>(false);
+  authState$ = this.authStateSubject.asObservable();
 
   constructor(private http: HttpClient) {
     this.loadToken();
+    this.authStateSubject.next(this.isAuthenticated());
   }
 
   // ========================
@@ -44,6 +47,7 @@ export class AuthService {
   setToken(token: string): void {
     this.token = token;
     localStorage.setItem(this.TOKEN_KEY, token);
+    this.authStateSubject.next(this.isAuthenticated());
     this.onAuthSuccess$.next();
   }
 
@@ -54,6 +58,7 @@ export class AuthService {
   logout(): void {
     this.token = null;
     localStorage.removeItem(this.TOKEN_KEY);
+    this.authStateSubject.next(false);
   }
 
   isAuthenticated(): boolean {
