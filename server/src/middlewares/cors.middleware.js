@@ -1,6 +1,7 @@
 import cors from "cors";
 import AppError from "../utils/appError.js";
-
+import dotenv from "dotenv";
+dotenv.config();
 const allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS
         .split(",")
@@ -19,7 +20,7 @@ const corsOptions = {
                     `CORS blocked for origin: ${origin}`,
                     403
                 )
-            );      
+            );
         }
     },
 

@@ -14,6 +14,7 @@ export interface Testimonial {
     phone: string;
     comment: string;
     stars: number;
+    avatar?: string;
     status: 'pending' | 'approved' | 'rejected';
     isVisible: boolean;
 }

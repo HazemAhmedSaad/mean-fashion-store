@@ -4,72 +4,27 @@ import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import {
+  AdminUpdateUserRequest,
+  ChangePasswordRequest,
+  UpdateAddressRequest,
+  UpdateMeRequest,
   User,
   UserResponse,
   UserResponseSingle,
 } from '../models/user.interface';
-import { Address } from '../models/address.interface';
+import { AddAddressRequest, AddressDeleteResponse, AddressListResponse } from '../models/address.interface';
+import { MessageResponse } from '../models/cart.interface';
 
 // ========================
 // Request Interfaces
 // ========================
 
-export interface UpdateMeRequest {
-  name?: string;
-  email?: string;
-  phone?: string;
-  gender?: 'male' | 'female' | null;
-}
 
-export interface ChangePasswordRequest {
-  currentPassword: string;
-  newPassword: string;
-}
-
-export interface AddAddressRequest {
-  label?: 'home' | 'work' | 'other';
-  city: string;
-  street: string;
-  building?: string;
-  notes?: string;
-  phoneNumber: string;
-  isDefault?: boolean;
-}
-
-export interface UpdateAddressRequest {
-  label?: 'home' | 'work' | 'other';
-  city?: string;
-  street?: string;
-  building?: string;
-  notes?: string;
-  phoneNumber?: string;
-  isDefault?: boolean;
-}
-
-export interface AdminUpdateUserRequest {
-  role?: 'user' | 'admin';
-  isBlocked?: boolean;
-}
 
 // ========================
 // Response Interfaces
 // ========================
 
-interface MessageResponse {
-  success: boolean;
-  message: string;
-}
-
-interface AddressListResponse {
-  success: boolean;
-  data: Address[];
-}
-
-interface AddressDeleteResponse {
-  success: boolean;
-  message: string;
-  data: Address[];
-}
 
 @Injectable({
   providedIn: 'root',

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import { AuthResponse } from '../models/auth.interface';
@@ -34,6 +34,7 @@ export class AuthService {
   private readonly TOKEN_KEY = 'token';
 
   private token: string | null = null;
+  public onAuthSuccess$ = new Subject<void>();
 
   constructor(private http: HttpClient) {
     this.loadToken();
@@ -62,6 +63,7 @@ export class AuthService {
   setToken(token: string): void {
     this.token = token;
     localStorage.setItem(this.TOKEN_KEY, token);
+    this.onAuthSuccess$.next();
   }
 
   getToken(): string | null {

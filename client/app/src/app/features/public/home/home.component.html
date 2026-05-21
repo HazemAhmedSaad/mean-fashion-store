@@ -1,1 +1,208 @@
-<p>home works!</p>
+<!-- Loading -->
+
+<div *ngIf="isLoading" class="min-h-screen flex items-center justify-center">
+  <div class="text-center">
+    <div class="w-14 h-14 border-4 border-black border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+
+    <p class="text-gray-500 text-lg">Loading amazing fashion...</p>
+  </div>
+</div>
+
+<!-- Main Content -->
+
+<main *ngIf="!isLoading" class="w-full">
+
+  <!-- Hero Section -->
+
+  <section
+    class="relative w-full h-[600px] md:h-[700px] bg-gray-900 md:rounded-3xl overflow-hidden md:mt-4 max-w-7xl mx-auto">
+    <img src="https://images.unsplash.com/photo-1512353087810-254cb3656f1f?q=80&w=2000&auto=format&fit=crop"
+      alt="Hero Background" class="absolute inset-0 w-full h-full object-cover opacity-60" />
+
+    <div class="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent"></div>
+
+    <div class="relative z-10 h-full flex flex-col justify-center px-6 md:px-16 max-w-3xl">
+      <span
+        class="bg-white/90 text-black text-[10px] md:text-xs font-bold px-4 py-1.5 rounded-full w-max mb-6 tracking-widest uppercase">
+        Fall / Winter 2026
+      </span>
+
+      <h1 class="text-5xl md:text-7xl lg:text-8xl font-bold text-white mb-6 leading-tight tracking-tighter">
+        Dress the <br />
+        Moment
+      </h1>
+
+      <p class="text-gray-200 text-lg md:text-xl mb-10 max-w-md font-light leading-relaxed">
+        Curated essentials and bold statement pieces for the modern wardrobe.
+      </p>
+
+      <div class="flex flex-col sm:flex-row gap-4">
+        <a routerLink="/products"
+          class="bg-white text-black px-8 py-4 rounded-full font-semibold hover:bg-gray-100 transition-colors flex items-center justify-center gap-3 group shadow-lg">
+          Shop Now
+
+          <i class="fa-solid fa-arrow-right transition-transform group-hover:translate-x-1"></i>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories -->
+
+  <section class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-10 gap-4">
+      <div>
+        <h2 class="text-3xl font-bold mb-2 tracking-tight">
+          Shop by Category
+        </h2>
+
+        <p class="text-gray-500 text-lg">
+          Find your style across our collections
+        </p>
+      </div>
+    </div>
+
+    <div
+      class="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar md:grid md:grid-cols-3 lg:grid-cols-6 gap-4 pb-4 md:pb-0">
+      <a *ngFor="
+          let category of categories;
+          trackBy: trackById
+        " [routerLink]="['/products']" [queryParams]="{ categoryId: category._id }"
+        class="group block text-center cursor-pointer min-w-[160px] md:min-w-0 snap-start">
+        <div class="w-full aspect-square rounded-[2rem] overflow-hidden mb-4 bg-gray-100 relative shadow-sm">
+          <img src="https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=600&auto=format&fit=crop"
+            [alt]="category.title" (error)="onImageError($event)"
+            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+
+          <div class="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors"></div>
+        </div>
+
+        <h3 class="font-medium text-gray-900 group-hover:text-black transition-colors">
+          {{ category.title }}
+        </h3>
+      </a>
+    </div>
+  </section>
+
+  <!-- New Arrivals -->
+
+  <section class="py-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="mb-10">
+      <h2 class="text-3xl font-bold mb-2 tracking-tight">
+        New Arrivals
+      </h2>
+
+      <p class="text-gray-500 text-lg">
+        Fresh styles, just landed
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div *ngFor="
+          let product of newArrivals;
+          trackBy: trackById
+        " class="group">
+        <div class="relative w-full aspect-[3/4] bg-gray-100 rounded-[2rem] overflow-hidden mb-5">
+          <img [src]="'http://localhost:8000' + product.images?.[0] || fallbackImage" [alt]="product.name"
+            (error)="onImageError($event)" class="w-full h-full object-cover group-hover:scale-105 transition-transform
+          duration-700" />
+
+          <!-- Badge -->
+
+          <div class="absolute top-5 left-5 flex gap-2">
+            <span *ngIf="product.stock > 0 && product.stock <= 5"
+              class="bg-[#F2B035] text-white text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-full shadow-sm">
+              Low Stock
+            </span>
+          </div>
+
+          <!-- Wishlist -->
+
+          <button
+            class="absolute top-5 right-5 w-10 h-10 bg-white rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 shadow-sm transition-all hover:scale-110">
+            <i class="fa-regular fa-heart"></i>
+          </button>
+
+          <!-- Add To Cart -->
+
+          <div
+            class="absolute bottom-5 left-5 right-5 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-4 group-hover:translate-y-0 hidden lg:block z-10">
+            <button
+              (click)="addToCart(product)"
+              class="w-full bg-white text-black font-semibold py-4 rounded-full hover:bg-gray-50 shadow-xl transition-colors">
+              Add to Cart
+            </button>
+          </div>
+        </div>
+
+        <div class="flex justify-between items-start mb-2 gap-4">
+          <h3 class="font-medium text-gray-900 text-lg leading-tight">
+            <a [routerLink]="['/products', product.slug]" class="hover:underline">
+              {{ product.name }}
+            </a>
+          </h3>
+
+          <span class="font-bold text-lg whitespace-nowrap">
+            ${{ product.price }}
+          </span>
+        </div>
+
+        <p class="text-gray-500 text-sm mb-4">
+          {{ product.stock }} in stock
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials -->
+
+  <section class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h2 class="text-3xl font-bold mb-2 tracking-tight">
+      What Customers Say
+    </h2>
+
+    <p class="text-gray-500 text-lg mb-12">
+      Real stories from our community
+    </p>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div *ngFor="
+          let review of apiTestimonials;
+          trackBy: trackById
+        "
+        class="bg-[#F9F9F9] p-10 rounded-[2rem] flex flex-col justify-between h-full hover:shadow-md transition-shadow">
+        <div>
+          <div class="flex text-[#F2B035] mb-6 gap-1.5 text-sm">
+            <i class="fa-solid fa-star" *ngFor="
+                let star of getStars(review.stars || 5)
+              "></i>
+          </div>
+
+          <p class="text-gray-800 font-medium leading-relaxed mb-10 text-lg">
+            {{ review.comment }}
+          </p>
+        </div>
+
+        <div class="flex items-center gap-4 mt-auto">
+          <img [src]="
+              review.avatar ||
+              'https://i.pravatar.cc/150?u=' + review.name
+            " [alt]="review.name" (error)="onImageError($event)"
+            class="w-12 h-12 rounded-full object-cover shadow-sm" />
+
+          <div>
+            <p class="font-bold text-gray-900">
+              {{ review.name }}
+            </p>
+
+            <p class="text-gray-500 text-xs flex items-center gap-1.5 mt-0.5">
+              <i class="fa-solid fa-circle-check text-green-600"></i>
+
+              Verified Buyer
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>

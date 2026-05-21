@@ -1,1 +1,585 @@
-<p>product-list works!</p>
+<!-- Toast Notification Component -->
+<div *ngIf="toast.show" 
+     [ngClass]="{
+       'bg-emerald-900 border-emerald-500 text-emerald-100': toast.type === 'success',
+       'bg-slate-900 border-slate-700 text-slate-100': toast.type === 'info',
+       'bg-rose-900 border-rose-500 text-rose-100': toast.type === 'error'
+     }"
+     class="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-4 rounded-2xl border shadow-2xl transition-all duration-500 max-w-sm animate-bounce-short">
+  <div class="flex-shrink-0">
+    <i class="fa-solid" 
+       [ngClass]="{
+         'fa-circle-check text-emerald-400 text-lg': toast.type === 'success',
+         'fa-circle-info text-sky-400 text-lg': toast.type === 'info',
+         'fa-triangle-exclamation text-rose-400 text-lg': toast.type === 'error'
+       }"></i>
+  </div>
+  <p class="text-sm font-medium tracking-wide">{{ toast.message }}</p>
+</div>
+
+<!-- Breadcrumbs & Header Section -->
+<div class="bg-gray-50 border-b border-gray-100 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav class="text-xs text-gray-400 font-medium uppercase tracking-widest flex items-center gap-2 mb-3">
+      <a routerLink="/" class="hover:text-black transition-colors">Home</a>
+      <i class="fa-solid fa-chevron-right text-[8px]"></i>
+      <span class="text-gray-900">Products</span>
+    </nav>
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-black tracking-tight font-sans">
+        All Products
+      </h1>
+      <div class="flex items-center gap-2 bg-white px-4 py-2 border border-gray-100 rounded-xl text-gray-500 text-xs font-semibold tracking-wider uppercase shadow-xs">
+        <i class="fa-solid fa-box-open text-gray-400"></i>
+        <span>{{ totalDocuments }} Items</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main Body Container -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+    
+    <!-- ==================== DESKTOP FILTER SIDEBAR ==================== -->
+    <aside class="hidden lg:block space-y-6">
+      <!-- Search Input -->
+      <div class="relative">
+        <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+        <input 
+          type="text" 
+          [value]="searchQuery" 
+          (input)="onSearchInput($event)"
+          placeholder="Search products..." 
+          class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200/80 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-black focus:bg-white transition-all duration-200 placeholder:text-gray-400 placeholder:font-medium font-medium text-gray-800"
+        />
+      </div>
+
+      <!-- Gender Accordion Filter -->
+      <div class="border-b border-gray-100 pb-5">
+        <button 
+          (click)="toggleAccordion('gender')" 
+          class="w-full flex justify-between items-center py-2 text-xs font-bold text-gray-900 tracking-widest uppercase cursor-pointer hover:opacity-85"
+        >
+          <span>Gender</span>
+          <i class="fa-solid text-[10px] text-gray-400 transition-transform duration-200" 
+             [ngClass]="accordionStates.gender ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+        </button>
+        
+        <div *ngIf="accordionStates.gender" class="mt-4 flex flex-wrap gap-2 animate-fade-in">
+          <button 
+            (click)="selectCategory(null)" 
+            [ngClass]="selectedCategoryId === null ? 'bg-black text-white border-black shadow-sm font-semibold' : 'bg-white border-gray-200 text-gray-500 hover:text-black hover:border-gray-300 font-medium'"
+            class="px-4 py-1.5 border rounded-full text-xs transition-all duration-200 cursor-pointer"
+          >
+            All
+          </button>
+          <button 
+            *ngFor="let category of categories"
+            (click)="selectCategory(category._id)" 
+            [ngClass]="selectedCategoryId === category._id ? 'bg-black text-white border-black shadow-sm font-semibold' : 'bg-white border-gray-200 text-gray-500 hover:text-black hover:border-gray-300 font-medium'"
+            class="px-4 py-1.5 border rounded-full text-xs capitalize transition-all duration-200 cursor-pointer"
+          >
+            {{ category.title }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Category Checklist Filter -->
+      <div class="border-b border-gray-100 pb-5">
+        <button 
+          (click)="toggleAccordion('category')" 
+          class="w-full flex justify-between items-center py-2 text-xs font-bold text-gray-900 tracking-widest uppercase cursor-pointer hover:opacity-85"
+        >
+          <span>Category</span>
+          <i class="fa-solid text-[10px] text-gray-400 transition-transform duration-200" 
+             [ngClass]="accordionStates.category ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+        </button>
+        
+        <div *ngIf="accordionStates.category" class="mt-4 space-y-2.5 animate-fade-in">
+          <label 
+            *ngFor="let sub of subCategories"
+            class="flex items-center justify-between text-sm text-gray-600 hover:text-black cursor-pointer group transition-colors duration-150"
+          >
+            <div class="flex items-center gap-3">
+              <input 
+                type="checkbox" 
+                [checked]="selectedSubCategoryId === sub._id"
+                (change)="toggleSubCategory(sub._id)"
+                class="w-4 h-4 accent-black border-gray-300 rounded focus:ring-black cursor-pointer"
+              />
+              <span class="font-medium group-hover:translate-x-0.5 transition-transform capitalize duration-150">{{ sub.title }}</span>
+            </div>
+            <span class="text-xs text-gray-400 font-semibold font-mono">{{ getSubcategoryCount(sub.title) }}</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Product Type Checklist Filter -->
+      <div class="border-b border-gray-100 pb-5">
+        <button 
+          (click)="toggleAccordion('productType')" 
+          class="w-full flex justify-between items-center py-2 text-xs font-bold text-gray-900 tracking-widest uppercase cursor-pointer hover:opacity-85"
+        >
+          <span>Product Type</span>
+          <i class="fa-solid text-[10px] text-gray-400 transition-transform duration-200" 
+             [ngClass]="accordionStates.productType ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+        </button>
+        
+        <div *ngIf="accordionStates.productType" class="mt-4 space-y-2.5 animate-fade-in">
+          <!-- Mocking types for design visual accuracy, binding to available subcategories -->
+          <label 
+            *ngFor="let sub of subCategories" 
+            class="flex items-center justify-between text-sm text-gray-600 hover:text-black cursor-pointer group transition-colors duration-150"
+          >
+            <div class="flex items-center gap-3">
+              <input 
+                type="checkbox" 
+                [checked]="selectedSubCategoryId === sub._id"
+                (change)="toggleSubCategory(sub._id)"
+                class="w-4 h-4 accent-black border-gray-300 rounded focus:ring-black cursor-pointer"
+              />
+              <span class="font-medium group-hover:translate-x-0.5 transition-transform capitalize duration-150">{{ sub.title }} Type</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Price Slider & Numeric Input Filter -->
+      <div class="border-b border-gray-100 pb-5">
+        <button 
+          (click)="toggleAccordion('price')" 
+          class="w-full flex justify-between items-center py-2 text-xs font-bold text-gray-900 tracking-widest uppercase cursor-pointer hover:opacity-85"
+        >
+          <span>Price Range</span>
+          <i class="fa-solid text-[10px] text-gray-400 transition-transform duration-200" 
+             [ngClass]="accordionStates.price ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+        </button>
+        
+        <div *ngIf="accordionStates.price" class="mt-5 space-y-5 animate-fade-in">
+          <!-- Custom Slider Track Visualizer -->
+          <div class="relative pt-1 px-1">
+            <input 
+              type="range" 
+              min="0" 
+              max="500" 
+              [(ngModel)]="maxPrice" 
+              (change)="applyPriceFilter()"
+              class="w-full accent-black cursor-pointer h-1.5 bg-gray-100 rounded-lg appearance-none"
+            />
+            <div class="flex justify-between text-[11px] text-gray-400 font-bold mt-2">
+              <span>$0</span>
+              <span>$500+</span>
+            </div>
+          </div>
+
+          <!-- Price Value Input boxes -->
+          <div class="flex items-center gap-2">
+            <div class="relative flex-1">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-bold">$</span>
+              <input 
+                type="number" 
+                [(ngModel)]="minPrice" 
+                (change)="applyPriceFilter()"
+                class="w-full pl-6 pr-2 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-gray-800 focus:outline-none focus:bg-white focus:ring-1 focus:ring-black" 
+              />
+            </div>
+            <span class="text-gray-400 text-xs font-semibold">—</span>
+            <div class="relative flex-1">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-bold">$</span>
+              <input 
+                type="number" 
+                [(ngModel)]="maxPrice" 
+                (change)="applyPriceFilter()"
+                class="w-full pl-6 pr-2 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-gray-800 focus:outline-none focus:bg-white focus:ring-1 focus:ring-black" 
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reset Controls -->
+      <button 
+        (click)="clearAllFilters()" 
+        class="w-full flex items-center justify-center gap-2 text-rose-500 hover:text-white border border-rose-200 hover:bg-rose-500 hover:border-rose-500 py-2.5 px-4 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-xs"
+      >
+        <i class="fa-solid fa-trash-can"></i>
+        <span>Clear All Filters</span>
+      </button>
+    </aside>
+
+    <!-- ==================== PRODUCTS GRID COLUMNS ==================== -->
+    <main class="col-span-1 lg:col-span-3 space-y-6">
+      
+      <!-- Top Grid Bar: Pagination Counts and Sorter -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50/50 p-4 border border-gray-100 rounded-2xl">
+        <p class="text-sm font-medium text-gray-500">
+          Showing 
+          <span class="text-black font-semibold">
+            {{ products.length > 0 ? (currentPage - 1) * limit + 1 : 0 }}–{{ (currentPage - 1) * limit + products.length }}
+          </span> 
+          of 
+          <span class="text-black font-semibold">{{ totalDocuments }}</span> results
+        </p>
+
+        <div class="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end">
+          <!-- Mobile Filter Trigger Button -->
+          <button 
+            (click)="toggleMobileFilters()" 
+            class="lg:hidden flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider shadow-md hover:bg-gray-900 cursor-pointer"
+          >
+            <i class="fa-solid fa-sliders"></i>
+            <span>Filters</span>
+          </button>
+
+          <!-- Sorter Dropdown -->
+          <div class="flex items-center gap-2.5 flex-shrink-0">
+            <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Sort by:</span>
+            <select 
+              [value]="sortBy"
+              (change)="onSortChange($event)"
+              class="bg-white border border-gray-200 px-4 py-2 rounded-xl text-xs font-semibold text-gray-800 focus:outline-none focus:ring-1 focus:ring-black cursor-pointer shadow-xs"
+            >
+              <option value="-createdAt">Newest</option>
+              <option value="price">Price: Low to High</option>
+              <option value="-price">Price: High to Low</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- SKELETON LOADERS -->
+      <div *ngIf="isLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+        <div *ngFor="let item of [1, 2, 3, 4, 5, 6]" class="border border-gray-100/50 rounded-2xl p-4 space-y-4">
+          <div class="bg-gray-100 rounded-xl aspect-[3/4]"></div>
+          <div class="h-4 bg-gray-100 rounded w-1/3"></div>
+          <div class="h-5 bg-gray-100 rounded w-3/4"></div>
+          <div class="h-10 bg-gray-100 rounded w-full mt-4"></div>
+        </div>
+      </div>
+
+      <!-- EMPTY STATE -->
+      <div *ngIf="!isLoading && products.length === 0" 
+           class="flex flex-col items-center justify-center text-center py-20 bg-white border border-dashed border-gray-200 rounded-3xl p-8 max-w-lg mx-auto animate-fade-in">
+        <div class="w-16 h-16 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mb-6 border border-gray-100 shadow-sm">
+          <i class="fa-solid fa-circle-question text-3xl"></i>
+        </div>
+        <h3 class="text-lg font-bold text-black mb-2">No Products Match Your Filters</h3>
+        <p class="text-sm text-gray-500 max-w-sm mb-8 leading-relaxed">
+          We couldn't find any products matching your specific selection. Try resetting your price bounds, clearing search keywords, or selecting another category.
+        </p>
+        <button 
+          (click)="clearAllFilters()" 
+          class="bg-black hover:bg-neutral-800 text-white font-bold text-xs uppercase tracking-widest px-6 py-3 rounded-xl shadow-md transition-all duration-200 cursor-pointer"
+        >
+          Reset All Filters
+        </button>
+      </div>
+
+      <!-- PRODUCTS CONTAINER -->
+      <div *ngIf="!isLoading && products.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div 
+          *ngFor="let product of products" 
+          class="group bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col h-full relative"
+        >
+          <!-- Product image container -->
+          <div class="relative overflow-hidden aspect-[3/4] bg-gray-50">
+            <!-- Badges -->
+            <span *ngIf="isLowStock(product)" 
+                  class="absolute top-3.5 left-3.5 z-10 bg-amber-500 text-black text-[9px] font-extrabold tracking-wider px-2 py-0.5 rounded shadow-sm uppercase font-sans">
+              Low Stock
+            </span>
+            <span *ngIf="!isLowStock(product) && product.isActive" 
+                  class="absolute top-3.5 left-3.5 z-10 bg-black text-white text-[9px] font-extrabold tracking-wider px-2 py-0.5 rounded shadow-sm uppercase font-sans">
+              New
+            </span>
+
+            <!-- Wishlist Heart Toggle Button -->
+            <button 
+              (click)="toggleWishlist(product._id)" 
+              class="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm border border-gray-100 flex items-center justify-center text-gray-500 hover:text-red-500 hover:scale-110 transition-all duration-200 shadow-sm cursor-pointer"
+            >
+              <i class="fa-heart text-sm transition-colors duration-150" 
+                 [ngClass]="wishlist.has(product._id) ? 'fa-solid text-red-500' : 'fa-regular'"></i>
+            </button>
+
+            <!-- Main Product Image -->
+            <img 
+              [src]="getProductImage(product)" 
+              [alt]="product.name" 
+              class="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+            />
+          </div>
+
+          <!-- Product description area -->
+          <div class="p-5 flex flex-col flex-grow">
+            <div class="flex justify-between items-start mb-1 text-[10px] font-extrabold uppercase tracking-widest text-gray-400 font-sans">
+              <span>Unisex</span>
+              <span class="text-black text-xs font-black tracking-normal">${{ product.price }}</span>
+            </div>
+            
+            <h3 class="font-bold text-gray-900 text-sm group-hover:text-black line-clamp-2 leading-snug flex-grow mb-4">
+              {{ product.name }}
+            </h3>
+
+            <!-- Add to Cart Button -->
+            <button 
+              (click)="addToCart(product)" 
+              class="w-full bg-white hover:bg-black border border-gray-200 hover:border-black text-black hover:text-white py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer shadow-xs"
+            >
+              <i class="fa-solid fa-bag-shopping text-xs"></i>
+              <span>Add to Cart</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGINATION CONTROLS -->
+      <div *ngIf="!isLoading && totalPages > 1" class="flex justify-center pt-8">
+        <nav class="flex items-center gap-1.5 bg-gray-50 p-1.5 border border-gray-100 rounded-2xl shadow-xs">
+          <!-- Previous button -->
+          <button 
+            (click)="goToPage(currentPage - 1)" 
+            [disabled]="currentPage === 1"
+            [ngClass]="currentPage === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-white hover:text-black cursor-pointer'"
+            class="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-150"
+          >
+            <i class="fa-solid fa-chevron-left text-xs"></i>
+          </button>
+
+          <!-- First page if far -->
+          <button 
+            *ngIf="pagesArray[0] > 1" 
+            (click)="goToPage(1)"
+            class="w-9 h-9 rounded-xl text-xs font-semibold text-gray-600 hover:bg-white hover:text-black transition-all duration-150 cursor-pointer"
+          >
+            1
+          </button>
+          <span *ngIf="pagesArray[0] > 2" class="text-gray-400 text-xs px-1">...</span>
+
+          <!-- Pages around active page -->
+          <button 
+            *ngFor="let page of pagesArray" 
+            (click)="goToPage(page)"
+            [ngClass]="page === currentPage ? 'bg-black text-white shadow-sm font-bold' : 'text-gray-600 hover:bg-white hover:text-black font-semibold'"
+            class="w-9 h-9 rounded-xl text-xs flex items-center justify-center transition-all duration-150 cursor-pointer"
+          >
+            {{ page }}
+          </button>
+
+          <!-- Last page if far -->
+          <span *ngIf="pagesArray[pagesArray.length - 1] < totalPages - 1" class="text-gray-400 text-xs px-1">...</span>
+          <button 
+            *ngIf="pagesArray[pagesArray.length - 1] < totalPages" 
+            (click)="goToPage(totalPages)"
+            class="w-9 h-9 rounded-xl text-xs font-semibold text-gray-600 hover:bg-white hover:text-black transition-all duration-150 cursor-pointer"
+          >
+            {{ totalPages }}
+          </button>
+
+          <!-- Next button -->
+          <button 
+            (click)="goToPage(currentPage + 1)" 
+            [disabled]="currentPage === totalPages"
+            [ngClass]="currentPage === totalPages ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-white hover:text-black cursor-pointer'"
+            class="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-150"
+          >
+            <i class="fa-solid fa-chevron-right text-xs"></i>
+          </button>
+        </nav>
+      </div>
+
+    </main>
+
+  </div>
+</div>
+
+<!-- ==================== MOBILE SLIDE-OUT FILTER DRAWER ==================== -->
+<div 
+  *ngIf="isMobileFilterOpen" 
+  class="fixed inset-0 z-50 lg:hidden transition-opacity duration-300 ease-out"
+>
+  <!-- Backdrop overlay -->
+  <div 
+    (click)="toggleMobileFilters()" 
+    class="absolute inset-0 bg-black/55 backdrop-blur-xs transition-opacity"
+  ></div>
+
+  <!-- Drawer panel content -->
+  <div 
+    class="absolute inset-y-0 left-0 max-w-xs w-full bg-white shadow-2xl flex flex-col p-6 space-y-6 overflow-y-auto animate-slide-right"
+  >
+    <!-- Header drawer -->
+    <div class="flex justify-between items-center border-b border-gray-100 pb-4">
+      <h2 class="text-sm font-black tracking-widest text-black uppercase">Filters</h2>
+      <button 
+        (click)="toggleMobileFilters()" 
+        class="text-gray-400 hover:text-black cursor-pointer w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center"
+      >
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
+
+    <!-- Search Input Inside Mobile Drawer -->
+    <div class="relative">
+      <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+      <input 
+        type="text" 
+        [value]="searchQuery" 
+        (input)="onSearchInput($event)"
+        placeholder="Search products..." 
+        class="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200/80 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-black focus:bg-white transition-all duration-200 placeholder:text-gray-400 placeholder:font-medium font-medium text-gray-800"
+      />
+    </div>
+
+    <!-- Mobile Gender Accordion -->
+    <div class="border-b border-gray-100 pb-5">
+      <button 
+        (click)="toggleAccordion('gender')" 
+        class="w-full flex justify-between items-center py-2 text-xs font-bold text-gray-900 tracking-widest uppercase cursor-pointer hover:opacity-85"
+      >
+        <span>Gender</span>
+        <i class="fa-solid text-[10px] text-gray-400 transition-transform duration-200" 
+           [ngClass]="accordionStates.gender ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+      </button>
+      
+      <div *ngIf="accordionStates.gender" class="mt-4 flex flex-wrap gap-2">
+        <button 
+          (click)="selectCategory(null)" 
+          [ngClass]="selectedCategoryId === null ? 'bg-black text-white border-black shadow-sm font-semibold' : 'bg-white border-gray-200 text-gray-500 hover:text-black hover:border-gray-300 font-medium'"
+          class="px-4 py-1.5 border rounded-full text-xs transition-all duration-200 cursor-pointer"
+        >
+          All
+        </button>
+        <button 
+          *ngFor="let category of categories"
+          (click)="selectCategory(category._id)" 
+          [ngClass]="selectedCategoryId === category._id ? 'bg-black text-white border-black shadow-sm font-semibold' : 'bg-white border-gray-200 text-gray-500 hover:text-black hover:border-gray-300 font-medium'"
+          class="px-4 py-1.5 border rounded-full text-xs capitalize transition-all duration-200 cursor-pointer"
+        >
+          {{ category.title }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Category Accordion -->
+    <div class="border-b border-gray-100 pb-5">
+      <button 
+        (click)="toggleAccordion('category')" 
+        class="w-full flex justify-between items-center py-2 text-xs font-bold text-gray-900 tracking-widest uppercase cursor-pointer hover:opacity-85"
+      >
+        <span>Category</span>
+        <i class="fa-solid text-[10px] text-gray-400 transition-transform duration-200" 
+           [ngClass]="accordionStates.category ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+      </button>
+      
+      <div *ngIf="accordionStates.category" class="mt-4 space-y-2.5">
+        <label 
+          *ngFor="let sub of subCategories"
+          class="flex items-center justify-between text-sm text-gray-600 hover:text-black cursor-pointer group"
+        >
+          <div class="flex items-center gap-3">
+            <input 
+              type="checkbox" 
+              [checked]="selectedSubCategoryId === sub._id"
+              (change)="toggleSubCategory(sub._id)"
+              class="w-4 h-4 accent-black border-gray-300 rounded focus:ring-black cursor-pointer"
+            />
+            <span class="font-medium capitalize">{{ sub.title }}</span>
+          </div>
+          <span class="text-xs text-gray-400 font-semibold font-mono">{{ getSubcategoryCount(sub.title) }}</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Mobile Product Type Accordion -->
+    <div class="border-b border-gray-100 pb-5">
+      <button 
+        (click)="toggleAccordion('productType')" 
+        class="w-full flex justify-between items-center py-2 text-xs font-bold text-gray-900 tracking-widest uppercase cursor-pointer hover:opacity-85"
+      >
+        <span>Product Type</span>
+        <i class="fa-solid text-[10px] text-gray-400 transition-transform duration-200" 
+           [ngClass]="accordionStates.productType ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+      </button>
+      
+      <div *ngIf="accordionStates.productType" class="mt-4 space-y-2.5">
+        <label 
+          *ngFor="let sub of subCategories" 
+          class="flex items-center justify-between text-sm text-gray-600 hover:text-black cursor-pointer group"
+        >
+          <div class="flex items-center gap-3">
+            <input 
+              type="checkbox" 
+              [checked]="selectedSubCategoryId === sub._id"
+              (change)="toggleSubCategory(sub._id)"
+              class="w-4 h-4 accent-black border-gray-300 rounded focus:ring-black cursor-pointer"
+            />
+            <span class="font-medium capitalize">{{ sub.title }} Type</span>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <!-- Mobile Price Accordion -->
+    <div class="border-b border-gray-100 pb-5">
+      <button 
+        (click)="toggleAccordion('price')" 
+        class="w-full flex justify-between items-center py-2 text-xs font-bold text-gray-900 tracking-widest uppercase cursor-pointer hover:opacity-85"
+      >
+        <span>Price Range</span>
+        <i class="fa-solid text-[10px] text-gray-400 transition-transform duration-200" 
+           [ngClass]="accordionStates.price ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+      </button>
+      
+      <div *ngIf="accordionStates.price" class="mt-4 space-y-4">
+        <div class="relative pt-1 px-1">
+          <input 
+            type="range" 
+            min="0" 
+            max="500" 
+            [(ngModel)]="maxPrice" 
+            (change)="applyPriceFilter()"
+            class="w-full accent-black cursor-pointer h-1.5 bg-gray-100 rounded-lg appearance-none"
+          />
+          <div class="flex justify-between text-[11px] text-gray-400 font-bold mt-2">
+            <span>$0</span>
+            <span>$500+</span>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <input 
+            type="number" 
+            [(ngModel)]="minPrice" 
+            (change)="applyPriceFilter()"
+            class="w-full pl-3 pr-2 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-gray-800 focus:outline-none" 
+          />
+          <span class="text-gray-400 text-xs">—</span>
+          <input 
+            type="number" 
+            [(ngModel)]="maxPrice" 
+            (change)="applyPriceFilter()"
+            class="w-full pl-3 pr-2 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold text-gray-800 focus:outline-none" 
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Clear filters & apply filters buttons inside mobile drawer -->
+    <div class="space-y-3 pt-6">
+      <button 
+        (click)="toggleMobileFilters()" 
+        class="w-full bg-black text-white hover:bg-neutral-800 font-bold text-xs uppercase tracking-widest py-3 px-4 rounded-xl shadow-md transition-all duration-200 cursor-pointer"
+      >
+        Apply Filters
+      </button>
+      <button 
+        (click)="clearAllFilters(); toggleMobileFilters()" 
+        class="w-full bg-white hover:bg-rose-50 text-rose-500 border border-rose-200 font-bold text-xs uppercase tracking-widest py-3 px-4 rounded-xl transition-all duration-200 cursor-pointer"
+      >
+        Clear Filters
+      </button>
+    </div>
+  </div>
+</div>

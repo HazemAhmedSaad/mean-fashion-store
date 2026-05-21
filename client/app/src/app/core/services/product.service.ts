@@ -7,11 +7,7 @@ import {
   ProductResponse,
   singleProductResponse,
 } from '../models/product.interface';
-
-interface MessageResponse {
-  success: boolean;
-  message: string;
-}
+import { MessageResponse } from '../models/cart.interface';
 
 @Injectable({
   providedIn: 'root',
@@ -19,7 +15,7 @@ interface MessageResponse {
 export class ProductService {
   private readonly API_URL = `${environment.apiUrl}/products`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // GET /products — Get all products (public, supports query params for filter/sort/paginate)
   getAll(params?: Record<string, string>): Observable<ProductResponse> {

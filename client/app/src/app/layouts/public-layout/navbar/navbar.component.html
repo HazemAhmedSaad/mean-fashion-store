@@ -1,1 +1,67 @@
-<p>navbar works!</p>
+<nav class="bg-white border-b border-gray-100 sticky top-0 z-50 transition-all duration-300">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between h-20 items-center">
+      <!-- Logo -->
+      <div class="flex-shrink-0 flex items-center">
+        <a routerLink="/" class="text-2xl font-bold tracking-tighter text-black flex items-center gap-2">
+          <i class="fa-solid fa-cube text-xl"></i>
+          MAISON
+        </a>
+      </div>
+
+      <!-- Desktop Navigation Links -->
+      <div class="hidden md:flex space-x-8 items-center h-full">
+        <a routerLink="/home" routerLinkActive="border-black text-black" class="border-transparent text-gray-500 hover:text-black hover:border-gray-300 border-b-2 inline-flex items-center px-1 pt-1 text-sm font-medium h-full transition-colors duration-200">Home</a>
+        <a routerLink="/products" routerLinkActive="border-black text-black" class="border-transparent text-gray-500 hover:text-black hover:border-gray-300 border-b-2 inline-flex items-center px-1 pt-1 text-sm font-medium h-full transition-colors duration-200">Shop</a>
+        <a routerLink="/collections" routerLinkActive="border-black text-black" class="border-transparent text-gray-500 hover:text-black hover:border-gray-300 border-b-2 inline-flex items-center px-1 pt-1 text-sm font-medium h-full transition-colors duration-200">Collections</a>
+        <a routerLink="/about" routerLinkActive="border-black text-black" class="border-transparent text-gray-500 hover:text-black hover:border-gray-300 border-b-2 inline-flex items-center px-1 pt-1 text-sm font-medium h-full transition-colors duration-200">About</a>
+        <a routerLink="/contact" routerLinkActive="border-black text-black" class="border-transparent text-gray-500 hover:text-black hover:border-gray-300 border-b-2 inline-flex items-center px-1 pt-1 text-sm font-medium h-full transition-colors duration-200">Contact</a>
+      </div>
+
+      <!-- Icons (Search, Wishlist, Cart) -->
+      <div class="hidden md:flex items-center space-x-6">
+        <button class="text-gray-500 hover:text-black transition-colors duration-200 transform hover:scale-110">
+          <i class="fa-solid fa-search text-lg"></i>
+        </button>
+        <button class="text-gray-500 hover:text-black transition-colors duration-200 transform hover:scale-110">
+          <i class="fa-regular fa-heart text-lg"></i>
+        </button>
+        <a routerLink="/cart" class="text-gray-500 hover:text-black transition-colors duration-200 relative transform hover:scale-110">
+          <i class="fa-solid fa-bag-shopping text-lg"></i>
+          <span class="absolute -top-1.5 -right-2 bg-black text-white text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center">
+            {{cartCount}}
+          </span>
+        </a>
+      </div>
+
+      <!-- Mobile menu button -->
+      <div class="flex items-center md:hidden space-x-5">
+        <a routerLink="/cart" class="text-gray-500 hover:text-black relative transition-colors">
+          <i class="fa-solid fa-bag-shopping text-xl"></i>
+          <span class="absolute -top-1.5 -right-2 bg-black text-white text-[10px] font-bold h-4 w-4 rounded-full flex items-center justify-center">
+            {{cartCount}}
+          </span>
+        </a>
+        <button type="button" (click)="toggleMobileMenu()" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-black hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-black transition-colors" aria-expanded="false">
+          <span class="sr-only">Open main menu</span>
+          <i class="fa-solid text-xl" [ngClass]="{'fa-xmark': isMobileMenuOpen, 'fa-bars': !isMobileMenuOpen}"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile menu, show/hide based on menu state. -->
+  <div class="md:hidden border-t border-gray-100 bg-white absolute w-full shadow-lg transition-all duration-300 origin-top" [ngClass]="isMobileMenuOpen ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0 pointer-events-none'">
+    <div class="pt-2 pb-3 space-y-1 px-4">
+      <a routerLink="/home" routerLinkActive="bg-gray-50 text-black font-semibold border-black" class="border-transparent text-gray-500 hover:bg-gray-50 hover:text-black block pl-3 pr-4 py-3 border-l-4 text-base font-medium transition-colors">Home</a>
+      <a routerLink="/products" routerLinkActive="bg-gray-50 text-black font-semibold border-black" class="border-transparent text-gray-500 hover:bg-gray-50 hover:text-black block pl-3 pr-4 py-3 border-l-4 text-base font-medium transition-colors">Shop</a>
+      <a routerLink="/collections" routerLinkActive="bg-gray-50 text-black font-semibold border-black" class="border-transparent text-gray-500 hover:bg-gray-50 hover:text-black block pl-3 pr-4 py-3 border-l-4 text-base font-medium transition-colors">Collections</a>
+      <a routerLink="/about" routerLinkActive="bg-gray-50 text-black font-semibold border-black" class="border-transparent text-gray-500 hover:bg-gray-50 hover:text-black block pl-3 pr-4 py-3 border-l-4 text-base font-medium transition-colors">About</a>
+      <a routerLink="/contact" routerLinkActive="bg-gray-50 text-black font-semibold border-black" class="border-transparent text-gray-500 hover:bg-gray-50 hover:text-black block pl-3 pr-4 py-3 border-l-4 text-base font-medium transition-colors">Contact</a>
+    </div>
+    <div class="pt-4 pb-6 border-t border-gray-100 px-4 flex space-x-8 justify-center">
+       <button class="text-gray-500 hover:text-black transition-colors"><i class="fa-solid fa-search text-xl"></i></button>
+       <button class="text-gray-500 hover:text-black transition-colors"><i class="fa-regular fa-heart text-xl"></i></button>
+    </div>
+  </div>
+</nav>

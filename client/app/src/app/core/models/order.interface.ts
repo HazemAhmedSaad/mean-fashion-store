@@ -58,3 +58,15 @@ export interface singleOrderResponse {
   success: boolean
   data: Order
 }
+
+export interface CreateOrderRequest {
+  addressId?: string;
+  shippingAddress?: {
+    addressText: string;
+    phone: string;
+  };
+}
+
+export interface UpdateOrderStatusRequest {
+  status: OrderStatus;
+}

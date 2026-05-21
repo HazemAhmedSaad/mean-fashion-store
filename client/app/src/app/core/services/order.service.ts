@@ -4,27 +4,16 @@ import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import {
+  CreateOrderRequest,
   OrderResponse,
   OrderStatus,
   singleOrderResponse,
+  UpdateOrderStatusRequest,
 } from '../models/order.interface';
+import { MessageResponse } from '../models/cart.interface';
 
-export interface CreateOrderRequest {
-  addressId?: string;
-  shippingAddress?: {
-    addressText: string;
-    phone: string;
-  };
-}
 
-export interface UpdateOrderStatusRequest {
-  status: OrderStatus;
-}
 
-interface MessageResponse {
-  success: boolean;
-  message: string;
-}
 
 @Injectable({
   providedIn: 'root',

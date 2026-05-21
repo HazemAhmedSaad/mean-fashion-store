@@ -4,26 +4,15 @@ import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
 import {
+  CreateSubCategoryRequest,
   SubCategoryResponse,
   singleSubCategoryResponse,
+  UpdateSubCategoryRequest,
 } from '../models/sub-category.interface';
+import { MessageResponse } from '../models/cart.interface';
 
-export interface CreateSubCategoryRequest {
-  title: string;
-  categoryId: string;
-  isActive?: boolean;
-}
 
-export interface UpdateSubCategoryRequest {
-  title?: string;
-  categoryId?: string;
-  isActive?: boolean;
-}
 
-interface MessageResponse {
-  success: boolean;
-  message: string;
-}
 
 @Injectable({
   providedIn: 'root',

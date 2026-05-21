@@ -5,26 +5,14 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   TestimonialsResponse,
-  Testimonial,
   singleTestimonialResponse,
-} from '../models/testimonial.interface';
+  CreateTestimonialRequest,
+  UpdateTestimonialRequest} from '../models/testimonial.interface';
+import { MessageResponse } from '../models/cart.interface';
 
-export interface CreateTestimonialRequest {
-  name: string;
-  phone: string;
-  comment: string;
-  stars?: number;
-}
 
-export interface UpdateTestimonialRequest {
-  status?: 'pending' | 'approved' | 'rejected';
-  isVisible?: boolean;
-}
 
-interface MessageResponse {
-  success: boolean;
-  message: string;
-}
+
 
 @Injectable({
   providedIn: 'root',

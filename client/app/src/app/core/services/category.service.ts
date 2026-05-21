@@ -7,22 +7,11 @@ import {
   CategoryResponse,
   Category,
   singleCategoryResponse,
+  CreateCategoryRequest,
+  UpdateCategoryRequest,
 } from '../models/category.interface';
+import { MessageResponse } from '../models/cart.interface';
 
-export interface CreateCategoryRequest {
-  title: string;
-  isActive?: boolean;
-}
-
-export interface UpdateCategoryRequest {
-  title?: string;
-  isActive?: boolean;
-}
-
-interface MessageResponse {
-  success: boolean;
-  message: string;
-}
 
 @Injectable({
   providedIn: 'root',

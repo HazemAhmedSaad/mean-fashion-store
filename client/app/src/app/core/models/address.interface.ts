@@ -1,25 +1,27 @@
 export interface Address {
   _id?: string;
-  label: 'home' | 'work' | 'other';
-  city: string;
-  street: string;
+  label?: 'home' | 'work' | 'other';
+  city?: string;
+  street?: string;
   building?: string;
   notes?: string;
-  phoneNumber: string;
+  phoneNumber?: string;
   isDefault?: boolean;
 }
 
 
-interface AddressListResponse {
+export interface AddressListResponse {
   success: boolean;
   data: Address[];
 }
 
-interface AddressDeleteResponse {
+export interface AddressDeleteResponse {
   success: boolean;
   message: string;
   data: Address[];
-}export interface AddAddressRequest {
+}
+
+export interface AddAddressRequest {
   label?: 'home' | 'work' | 'other';
   city: string;
   street: string;
