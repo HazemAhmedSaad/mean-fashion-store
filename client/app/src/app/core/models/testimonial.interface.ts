@@ -17,6 +17,8 @@ export interface Testimonial {
     avatar?: string;
     status: 'pending' | 'approved' | 'rejected';
     isVisible: boolean;
+    createdAt: string;
+    updatedAt: string;
 }
 
 export interface singleTestimonialResponse {

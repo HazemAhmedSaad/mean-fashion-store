@@ -1,1 +1,199 @@
-<p>testimonials-control works!</p>
+<div class="dashboard-container">
+  <!-- Toast Notification -->
+  <div class="toast-container" *ngIf="toastMessage">
+    <div class="toast show">
+      {{ toastMessage }}
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-titles">
+      <h2>Testimonials Management</h2>
+      <p>Manage customer reviews and approval workflow</p>
+    </div>
+    <div class="header-actions">
+      <div class="search-input">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="Search testimonials..." [(ngModel)]="searchQuery" (keyup)="onSearchInput($event)">
+      </div>
+      <div class="select-wrapper">
+        <select [(ngModel)]="selectedStatus" (change)="applyFilters()">
+          <option value="">All Status</option>
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="summary-cards">
+    <div class="summary-card pending-card">
+      <div class="card-icon"><i class="fa-regular fa-clock"></i></div>
+      <div class="card-value">{{ pendingCount }}</div>
+      <div class="card-label">Awaiting Approval</div>
+    </div>
+    <div class="summary-card approved-card">
+      <div class="card-icon"><i class="fa-regular fa-circle-check"></i></div>
+      <div class="card-value">{{ approvedCount }}</div>
+      <div class="card-label">Approved</div>
+    </div>
+    <div class="summary-card rejected-card">
+      <div class="card-icon"><i class="fa-regular fa-circle-xmark"></i></div>
+      <div class="card-value">{{ rejectedCount }}</div>
+      <div class="card-label">Not displayed</div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-container">
+    <div class="table-header-row">
+      <h3 class="table-title">All Testimonials</h3>
+      <span class="table-count">Showing {{ (page - 1) * limit + 1 }}–{{ (page * limit) > totalTestimonials ? totalTestimonials : (page * limit) }} of {{ totalTestimonials }} testimonials</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>CUSTOMER</th>
+          <th>COMMENT</th>
+          <th>STATUS</th>
+          <th>VISIBLE</th>
+          <th>DATE</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let testimonial of testimonials" (click)="openDrawer(testimonial)">
+          <td>
+            <div class="user-info">
+              <div class="avatar" [style.background]="'#fde047'" [style.color]="'#854d0e'">
+                {{ getInitials(testimonial.name) }}
+              </div>
+              <div class="user-details">
+                <span class="user-name">{{ testimonial.name }}</span>
+                <span class="user-phone">{{ testimonial.phone }}</span>
+              </div>
+            </div>
+          </td>
+          <td class="comment-cell">
+            <div class="stars-mini">
+              <i class="fa-solid fa-star text-warning" *ngFor="let _ of getStarsArray(testimonial.stars)"></i>
+            </div>
+            <div class="comment-text">{{ testimonial.comment.length > 50 ? (testimonial.comment | slice:0:50) + '...' : testimonial.comment }}</div>
+          </td>
+          <td>
+            <span class="status-badge" [ngClass]="{
+              'badge-pending': testimonial.status === 'pending',
+              'badge-approved': testimonial.status === 'approved',
+              'badge-rejected': testimonial.status === 'rejected'
+            }">
+              {{ testimonial.status | titlecase }}
+            </span>
+          </td>
+          <td>
+            <div class="toggle-switch" (click)="toggleVisibility(testimonial, $event)">
+              <input type="checkbox" [checked]="testimonial.isVisible" readonly>
+              <label></label>
+            </div>
+          </td>
+          <td class="date-cell">{{ testimonial.createdAt | date:'MMM dd, yyyy' }}</td>
+        </tr>
+        <tr *ngIf="!isLoading && testimonials.length === 0">
+          <td colspan="5" class="text-center py-8">No testimonials found.</td>
+        </tr>
+        <tr *ngIf="isLoading">
+          <td colspan="5" class="text-center py-8">Loading testimonials...</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <!-- Pagination -->
+    <div class="pagination-container" *ngIf="totalPages > 1">
+      <div class="pagination-info">
+        Showing {{ (page - 1) * limit + 1 }}-{{ (page * limit) > totalTestimonials ? totalTestimonials : (page * limit) }} of {{ totalTestimonials }}
+      </div>
+      <div class="pagination-controls">
+        <button class="page-btn" [disabled]="page === 1" (click)="changePage(page - 1)">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <ng-container *ngFor="let p of pages">
+          <button class="page-btn" [class.active]="page === p" (click)="changePage(p)">
+            {{ p }}
+          </button>
+        </ng-container>
+        <button class="page-btn" [disabled]="page === totalPages" (click)="changePage(page + 1)">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal/Drawer for Review Details -->
+  <div class="drawer-overlay" [class.open]="isDrawerOpen" (click)="closeDrawer()">
+    <div class="drawer-content modal-style" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">Review Details</h3>
+        <p class="modal-subtitle" *ngIf="selectedTestimonial">Review submitted {{ selectedTestimonial.createdAt | date:'MMM dd, yyyy' }}</p>
+        <button class="close-modal-btn" (click)="closeDrawer()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      
+      <div class="modal-body" *ngIf="selectedTestimonial">
+        <!-- User Info -->
+        <div class="review-user-info">
+          <div class="avatar large" [style.background]="'#fde047'" [style.color]="'#854d0e'">
+            {{ getInitials(selectedTestimonial.name) }}
+          </div>
+          <div class="user-details">
+            <div class="user-name-row">
+              <span class="user-name">{{ selectedTestimonial.name }}</span>
+              <span class="role-tag">Customer</span>
+            </div>
+            <span class="user-phone">{{ selectedTestimonial.phone }}</span>
+          </div>
+          <div class="status-indicator">
+            <span class="status-badge" [ngClass]="{
+              'badge-pending': selectedTestimonial.status === 'pending',
+              'badge-approved': selectedTestimonial.status === 'approved',
+              'badge-rejected': selectedTestimonial.status === 'rejected'
+            }">
+              {{ selectedTestimonial.status | titlecase }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Rating -->
+        <div class="review-rating">
+          <div class="stars">
+            <i class="fa-solid fa-star text-warning" *ngFor="let _ of getStarsArray(selectedTestimonial.stars)"></i>
+            <i class="fa-regular fa-star text-muted" *ngFor="let _ of getEmptyStarsArray(selectedTestimonial.stars)"></i>
+          </div>
+          <span class="rating-value">{{ selectedTestimonial.stars | number:'1.1-1' }}</span>
+          <span class="rating-label" *ngIf="selectedTestimonial.stars >= 4">- Excellent</span>
+        </div>
+
+        <!-- Comment -->
+        <div class="review-comment-box">
+          <i class="fa-solid fa-quote-right quote-icon"></i>
+          <p>{{ selectedTestimonial.comment }}</p>
+        </div>
+      </div>
+
+      <div class="modal-footer" *ngIf="selectedTestimonial">
+        <button class="btn btn-outline" (click)="closeDrawer()">Close</button>
+        <div class="spacer"></div>
+        <button class="btn btn-danger-outline" (click)="deleteTestimonial(selectedTestimonial._id)">
+          <i class="fa-regular fa-trash-can"></i> Delete
+        </button>
+        <button class="btn btn-danger-outline" *ngIf="selectedTestimonial.status !== 'rejected'" (click)="updateStatus(selectedTestimonial, 'rejected')">
+          <i class="fa-solid fa-xmark"></i> Reject
+        </button>
+        <button class="btn btn-success" *ngIf="selectedTestimonial.status !== 'approved'" (click)="updateStatus(selectedTestimonial, 'approved')">
+          <i class="fa-solid fa-check"></i> Approve
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
