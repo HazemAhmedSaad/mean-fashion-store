@@ -1,1 +1,227 @@
-<p>user-control works!</p>
+<div class="dashboard-container">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-titles">
+      <h2>Users Management</h2>
+      <p>{{ totalUsers | number }} registered users</p>
+    </div>
+    <div class="header-actions">
+      <div class="search-input">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="Search by name or email..." [(ngModel)]="searchQuery" (keyup.enter)="onSearchChange()">
+      </div>
+      <button class="btn btn-primary">
+        <i class="fa-solid fa-plus"></i> Add User
+      </button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>USER</th>
+          <th>PHONE</th>
+          <th>ROLE</th>
+          <th>STATUS</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let user of users" (click)="openDrawer(user)">
+          <td>
+            <div class="user-info">
+              <div class="avatar">{{ getInitials(user.name) }}</div>
+              <div class="user-details">
+                <span class="user-name">{{ user.name }}</span>
+                <span class="user-email">{{ user.email || 'N/A' }}</span>
+              </div>
+            </div>
+          </td>
+          <td class="font-medium text-muted">{{ user.phone || 'N/A' }}</td>
+          <td>
+            <span class="role-badge" [ngClass]="user.role === 'admin' ? 'badge-admin' : 'badge-customer'">
+              {{ user.role === 'admin' ? 'Admin' : 'Customer' }}
+            </span>
+          </td>
+          <td>
+            <span class="status-badge" [ngClass]="user.isBlocked ? 'badge-blocked' : 'badge-active'">
+              {{ user.isBlocked ? 'Blocked' : 'Active' }}
+            </span>
+          </td>
+          <td class="action-cell">
+            <button class="icon-btn" (click)="openDrawer(user); $event.stopPropagation()">
+              <i class="fa-solid fa-ellipsis"></i>
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="users.length === 0">
+          <td colspan="5" class="text-center py-8">No users found.</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <!-- Pagination -->
+    <div class="pagination-container" *ngIf="pagination && pagination.totalPages > 1">
+      <div class="pagination-info">
+        Showing {{ (currentPage - 1) * limit + 1 }}-{{ min(currentPage * limit, totalUsers) }} of {{ totalUsers | number }} users
+      </div>
+      <div class="pagination-controls">
+        <button class="page-btn" [disabled]="currentPage === 1" (click)="changePage(currentPage - 1)">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        
+        <ng-container *ngFor="let page of getPageArray()">
+          <button class="page-btn" [class.active]="currentPage === page" (click)="changePage(page)">
+            {{ page }}
+          </button>
+        </ng-container>
+        
+        <button class="page-btn" [disabled]="currentPage === pagination.totalPages" (click)="changePage(currentPage + 1)">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drawer -->
+  <div class="drawer-overlay" [class.open]="isDrawerOpen" (click)="closeDrawer()">
+    <div class="drawer-content" (click)="$event.stopPropagation()">
+      
+      <!-- Drawer Header -->
+      <div class="drawer-header" *ngIf="selectedUser">
+        <h4 class="drawer-title">USER PROFILE</h4>
+        <button class="close-drawer-btn" (click)="closeDrawer()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      
+      <div class="drawer-profile-summary" *ngIf="selectedUser">
+        <div class="profile-info-large">
+          <div class="avatar-large">{{ getInitials(selectedUser.name) }}</div>
+          <div class="profile-details">
+            <h3 class="profile-name">{{ selectedUser.name }}</h3>
+            <p class="profile-email">{{ selectedUser.email }}</p>
+            <p class="profile-phone">{{ selectedUser.phone }}</p>
+            <div class="profile-badges">
+              <span class="role-badge" [ngClass]="selectedUser.role === 'admin' ? 'badge-admin' : 'badge-customer'">
+                {{ selectedUser.role === 'admin' ? 'Admin' : 'Customer' }}
+              </span>
+              <span class="status-badge" [ngClass]="selectedUser.isBlocked ? 'badge-blocked' : 'badge-active'">
+                {{ selectedUser.isBlocked ? 'Blocked' : 'Active' }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="profile-actions-row">
+          <span class="joined-date">Joined {{ (selectedUser.createdAt || '2024-03-12') | date:'MMM dd, yyyy' }}</span>
+          <button class="btn btn-outline btn-sm">
+            <i class="fa-solid fa-pen"></i> Edit Profile
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabs Navigation -->
+      <div class="drawer-tabs" *ngIf="selectedUser">
+        <button class="tab-btn" [class.active]="activeTab === 'Orders'" (click)="setTab('Orders')">Orders</button>
+        <button class="tab-btn" [class.active]="activeTab === 'Addresses'" (click)="setTab('Addresses')">Addresses</button>
+        <button class="tab-btn" [class.active]="activeTab === 'Settings'" (click)="setTab('Settings')">Settings</button>
+      </div>
+
+      <!-- Drawer Body -->
+      <div class="drawer-body" *ngIf="selectedUser">
+        
+        <!-- Orders Tab -->
+        <div class="tab-content" *ngIf="activeTab === 'Orders'">
+          <div class="section-header">
+            <h4 class="section-title mb-0">ORDERS HISTORY</h4>
+            <span class="section-meta">Last 5</span>
+          </div>
+          
+          <div class="orders-list mt-4">
+            <div class="order-item" *ngFor="let order of userOrders">
+              <div class="order-left">
+                <div class="order-id font-medium">#ORD-{{ order._id.substring(order._id.length - 5).toUpperCase() }}</div>
+                <div class="order-meta">{{ order.items.length }} item(s) · {{ order.orderDate | date:'MMM dd' }}</div>
+              </div>
+              <div class="order-right">
+                <div class="order-total font-semibold">EGP {{ order.totalPrice | number }}</div>
+                <div class="status-badge" [ngClass]="getOrderStatusClass(order.status)">
+                  {{ getOrderStatusDisplay(order.status) }}
+                </div>
+              </div>
+            </div>
+            
+            <div class="empty-state" *ngIf="userOrders.length === 0">
+              <p>No orders found for this user.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Addresses Tab -->
+        <div class="tab-content" *ngIf="activeTab === 'Addresses'">
+          <h4 class="section-title mb-4">SAVED ADDRESSES</h4>
+          <div class="addresses-list">
+            <div class="address-card" *ngFor="let address of selectedUser.addresses">
+              <div class="address-header">
+                <div class="address-label">
+                  <span class="label-badge">{{ address.label || 'Home' }}</span>
+                  <i class="fa-solid fa-star text-warning" *ngIf="address.isDefault"></i>
+                </div>
+                <div class="address-actions">
+                  <button class="icon-btn-sm"><i class="fa-solid fa-pen"></i></button>
+                  <button class="icon-btn-sm text-danger"><i class="fa-solid fa-trash"></i></button>
+                </div>
+              </div>
+              <div class="address-details">
+                <p class="address-line font-medium">{{ address.building ? address.building + ', ' : '' }}{{ address.street }}</p>
+                <p class="address-city">{{ address.city }}</p>
+              </div>
+            </div>
+            
+            <div class="empty-state" *ngIf="!selectedUser.addresses || selectedUser.addresses.length === 0">
+              <p>No addresses saved.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div class="tab-content" *ngIf="activeTab === 'Settings'">
+          <h4 class="section-title mb-4">ACCOUNT SETTINGS</h4>
+          
+          <div class="settings-group">
+            <label class="settings-label">Role</label>
+            <div class="select-wrapper full-width">
+              <select [(ngModel)]="drawerUpdateRole" (change)="updateUserStatus()">
+                <option value="user">Customer</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="settings-card">
+            <div class="settings-card-text">
+              <div class="settings-card-title font-medium">Account Status</div>
+              <div class="settings-card-desc">Active and able to log in</div>
+            </div>
+            <div class="toggle-switch">
+              <input type="checkbox" id="accountStatus" [(ngModel)]="drawerUpdateIsActive" (change)="updateUserStatus()">
+              <label for="accountStatus"></label>
+            </div>
+          </div>
+          
+          <div class="settings-actions">
+            <button class="btn btn-outline full-width mt-3" (click)="resetPassword()">
+              <i class="fa-solid fa-key"></i> Reset Password
+            </button>
+            <button class="btn btn-danger-outline full-width mt-3" (click)="deleteAccount()">
+              <i class="fa-solid fa-trash"></i> Delete Account
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

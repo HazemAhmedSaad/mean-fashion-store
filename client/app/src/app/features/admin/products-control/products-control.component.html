@@ -1,1 +1,208 @@
-<p>products-control works!</p>
+<main class="products-admin">
+  <div *ngIf="toastMessage" class="admin-toast">
+    <i class="fa-solid fa-circle-check"></i>
+    {{ toastMessage }}
+  </div>
+
+  <header class="admin-topbar">
+    <nav>
+      <span>Dashboard</span>
+      <i class="fa-solid fa-chevron-right"></i>
+      <strong>Products</strong>
+    </nav>
+
+    <div class="global-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="search" placeholder="Search anything..." (input)="onSearchInput($event)" />
+    </div>
+  </header>
+
+  <section class="page-head">
+    <div>
+      <h1>Products<br />Management</h1>
+      <p>{{ totalProducts }} products total · {{ activeCount }} active · {{ inactiveCount }} inactive</p>
+    </div>
+
+    <div class="toolbar">
+      <label class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="search" placeholder="Search products..." (input)="onSearchInput($event)" />
+      </label>
+
+      <button class="filter-button" type="button" (click)="applyFilters()">
+        <i class="fa-solid fa-filter"></i>
+        Filters
+      </button>
+
+      <select [(ngModel)]="selectedCategoryId" (change)="applyFilters()">
+        <option value="">Category</option>
+        <option *ngFor="let category of categories" [value]="category._id">{{ category.title }}</option>
+      </select>
+
+      <select [(ngModel)]="selectedStatus" (change)="applyFilters()">
+        <option value="">Status</option>
+        <option value="true">Active</option>
+        <option value="false">Inactive</option>
+      </select>
+
+      <button class="add-button" type="button" title="Create product">
+        <i class="fa-solid fa-plus"></i>
+      </button>
+    </div>
+  </section>
+
+  <section class="bulk-bar" *ngIf="selectedCount > 0">
+    <div>
+      <i class="fa-regular fa-square-check"></i>
+      <strong>{{ selectedCount }} selected</strong>
+      <span>·</span>
+      <button type="button" (click)="selectAllCurrentProducts()">Select all {{ products.length }}</button>
+    </div>
+
+    <div class="bulk-actions">
+      <button type="button" (click)="bulkActivate()" [disabled]="isMutating">
+        <i class="fa-regular fa-circle-check"></i>
+        Bulk Activate
+      </button>
+      <button type="button" (click)="bulkDeactivate()" [disabled]="isMutating">
+        <i class="fa-regular fa-circle-xmark"></i>
+        Bulk Deactivate
+      </button>
+      <button class="danger" type="button" (click)="bulkDelete()" [disabled]="isMutating">
+        <i class="fa-regular fa-trash-can"></i>
+        Bulk Delete
+      </button>
+    </div>
+  </section>
+
+  <section *ngIf="errorMessage" class="state-card state-card--error">
+    <i class="fa-solid fa-circle-exclamation"></i>
+    <p>{{ errorMessage }}</p>
+    <button type="button" (click)="loadProducts()">Retry</button>
+  </section>
+
+  <section class="products-card" *ngIf="!errorMessage">
+    <div *ngIf="isLoading" class="state-card">
+      <span class="spinner"></span>
+      <p>Loading products...</p>
+    </div>
+
+    <ng-container *ngIf="!isLoading">
+      <div class="table-wrap" *ngIf="products.length > 0; else emptyProducts">
+        <table>
+          <thead>
+            <tr>
+              <th>
+                <input type="checkbox" [checked]="isCurrentPageSelected" (change)="toggleCurrentPageSelection()" />
+              </th>
+              <th>Image</th>
+              <th>Title</th>
+              <th>Category</th>
+              <th>Sub-Category</th>
+              <th>
+                <button type="button" (click)="changeSort(sortBy === 'price' ? '-price' : 'price')">
+                  Price <i class="fa-solid fa-arrow-up-arrow-down"></i>
+                </button>
+              </th>
+              <th>
+                <button type="button" (click)="changeSort(sortBy === 'stock' ? '-stock' : 'stock')">
+                  Stock <i class="fa-solid fa-arrow-down-short-wide"></i>
+                </button>
+              </th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let product of products; trackBy: trackById" [class.selected]="selectedIds.has(product._id)">
+              <td>
+                <input
+                  type="checkbox"
+                  [checked]="selectedIds.has(product._id)"
+                  (change)="toggleSelection(product._id)"
+                />
+              </td>
+              <td>
+                <img class="product-thumb" [src]="getProductImage(product)" [alt]="product.name" />
+              </td>
+              <td>
+                <strong>{{ product.name }}</strong>
+              </td>
+              <td>
+                <span class="tag">{{ getCategoryName(product.categoryId) }}</span>
+              </td>
+              <td>{{ getSubCategoryName(product.subCategoryId) }}</td>
+              <td><strong>EGP {{ product.price | number }}</strong></td>
+              <td>
+                {{ product.stock }}
+                <span *ngIf="isLowStock(product)" class="low-pill">Low</span>
+              </td>
+              <td>
+                <button class="switch" type="button" [class.on]="product.isActive" (click)="toggleActive(product)">
+                  <span></span>
+                </button>
+              </td>
+              <td>
+                <a class="view-button" [href]="'/products/' + product.slug + '/' + product._id" target="_blank">
+                  <i class="fa-regular fa-eye"></i>
+                </a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mobile-list" *ngIf="products.length > 0">
+        <article *ngFor="let product of products; trackBy: trackById" class="mobile-product">
+          <input type="checkbox" [checked]="selectedIds.has(product._id)" (change)="toggleSelection(product._id)" />
+          <img [src]="getProductImage(product)" [alt]="product.name" />
+          <div>
+            <h3>{{ product.name }}</h3>
+            <p>{{ getCategoryName(product.categoryId) }} · {{ getSubCategoryName(product.subCategoryId) }}</p>
+            <strong>EGP {{ product.price | number }}</strong>
+            <span>Stock {{ product.stock }}</span>
+          </div>
+          <button class="switch" type="button" [class.on]="product.isActive" (click)="toggleActive(product)">
+            <span></span>
+          </button>
+        </article>
+      </div>
+
+      <footer class="table-footer" *ngIf="products.length > 0">
+        <p>Showing {{ products.length }} of {{ totalProducts }} products</p>
+        <label>
+          Rows per page
+          <select [(ngModel)]="limit" (change)="applyFilters()">
+            <option [ngValue]="8">8</option>
+            <option [ngValue]="12">12</option>
+            <option [ngValue]="20">20</option>
+          </select>
+        </label>
+
+        <nav class="pagination">
+          <button type="button" (click)="goToPage(page - 1)" [disabled]="page === 1">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          <button
+            *ngFor="let item of pages"
+            type="button"
+            [class.active]="item === page"
+            (click)="goToPage(item)"
+          >
+            {{ item }}
+          </button>
+          <button type="button" (click)="goToPage(page + 1)" [disabled]="page === totalPages">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </nav>
+      </footer>
+    </ng-container>
+  </section>
+</main>
+
+<ng-template #emptyProducts>
+  <div class="state-card">
+    <i class="fa-solid fa-box-open"></i>
+    <p>No products match your filters.</p>
+  </div>
+</ng-template>

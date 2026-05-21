@@ -1,1 +1,41 @@
-<p>sidebar works!</p>
+<button class="mobile-admin-toggle" type="button" (click)="toggle()" aria-label="Toggle admin menu">
+  <i class="fa-solid" [ngClass]="isOpen ? 'fa-xmark' : 'fa-bars'"></i>
+  <span>Admin</span>
+</button>
+
+<aside class="admin-sidebar" [class.open]="isOpen">
+  <div class="brand-row">
+    <a routerLink="/admin" (click)="close()">
+      <i class="fa-solid fa-shirt"></i>
+      <span>MAISON</span>
+    </a>
+    <span>Admin</span>
+  </div>
+
+  <nav class="admin-nav">
+    <a
+      *ngFor="let link of links"
+      [routerLink]="link.route"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: link.route === '/admin' }"
+      (click)="close()"
+    >
+      <i class="fa-solid" [ngClass]="link.icon"></i>
+      <span>{{ link.label }}</span>
+      <strong *ngIf="link.badge" [class.warn]="link.warn">{{ link.badge }}</strong>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="admin-avatar">LH</div>
+    <div>
+      <strong>Layla Hassan</strong>
+      <span>Store Owner</span>
+    </div>
+    <button type="button" (click)="logout()" aria-label="Logout">
+      <i class="fa-solid fa-right-from-bracket"></i>
+    </button>
+  </div>
+</aside>
+
+<button *ngIf="isOpen" class="sidebar-backdrop" type="button" (click)="close()" aria-label="Close admin menu"></button>

@@ -1,1 +1,333 @@
-<p>order-control works!</p>
+<div class="dashboard-container">
+  
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-titles">
+      <h2>Orders Management</h2>
+      <p>{{ totalOrders | number }} orders total · Track and update order status</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-outline">
+        <i class="fa-solid fa-filter"></i> Filter
+      </button>
+      <button class="btn btn-outline">
+        <i class="fa-solid fa-download"></i> Export
+      </button>
+      <button class="btn btn-primary">
+        <i class="fa-solid fa-plus"></i> New Order
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon pending-icon">
+        <i class="fa-regular fa-clock"></i>
+        <span>PENDING</span>
+      </div>
+      <h3>{{ stats.pending }}</h3>
+      <p>Awaiting confirmation</p>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon preparing-icon">
+        <i class="fa-solid fa-box"></i>
+        <span>PREPARING</span>
+      </div>
+      <h3>{{ stats.preparing }}</h3>
+      <p>In warehouse</p>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon shipped-icon">
+        <i class="fa-solid fa-truck"></i>
+        <span>SHIPPED</span>
+      </div>
+      <h3>{{ stats.shipped }}</h3>
+      <p>In transit</p>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon delivered-icon">
+        <i class="fa-regular fa-circle-check"></i>
+        <span>DELIVERED</span>
+      </div>
+      <h3>{{ stats.delivered }}</h3>
+      <p>Completed</p>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon cancelled-icon">
+        <i class="fa-regular fa-circle-xmark"></i>
+        <span>CANCELLED</span>
+      </div>
+      <h3>{{ stats.cancelled }}</h3>
+      <p>By customer</p>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon rejected-icon">
+        <i class="fa-solid fa-ban"></i>
+        <span>REJECTED</span>
+      </div>
+      <h3>{{ stats.rejected }}</h3>
+      <p>By store</p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-bar">
+    <div class="search-input">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" placeholder="Search orders" [(ngModel)]="searchQuery" (keyup.enter)="onFilterChange()">
+    </div>
+    
+    <div class="select-wrapper">
+      <select [(ngModel)]="statusFilter" (change)="onFilterChange()">
+        <option *ngFor="let status of statusList" [value]="status.value">{{ status.label }}</option>
+      </select>
+    </div>
+    
+    <div class="select-wrapper">
+      <select [(ngModel)]="paymentFilter" (change)="onFilterChange()">
+        <option value="">Payment Method</option>
+        <option value="cod">Cash on Delivery</option>
+        <option value="card">Card</option>
+      </select>
+    </div>
+
+    <div class="select-wrapper">
+      <select [(ngModel)]="dateRangeFilter" (change)="onFilterChange()">
+        <option value="">Date Range</option>
+        <option value="today">Today</option>
+        <option value="week">This Week</option>
+        <option value="month">This Month</option>
+      </select>
+    </div>
+
+    <button class="clear-btn" (click)="clearFilters()">
+      <i class="fa-solid fa-xmark"></i> Clear filters
+    </button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>ORDER ID</th>
+          <th>CUSTOMER</th>
+          <th>ITEMS</th>
+          <th>TOTAL</th>
+          <th>PAYMENT</th>
+          <th>STATUS</th>
+          <th>DATE</th>
+          <th>ACTION</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let order of orders" (click)="openDrawer(order)">
+          <td class="font-medium">#ORD-{{ order._id.substring(order._id.length - 5).toUpperCase() }}</td>
+          <td>
+            <div class="customer-info">
+              <div class="avatar">{{ order.userId.name.substring(0, 2).toUpperCase() }}</div>
+              <div class="customer-details">
+                <span class="customer-name">{{ order.userId.name }}</span>
+                <span class="customer-location">{{ order.shippingAddress.addressText.split(',')[0] }}</span>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="items-count">
+              <span *ngIf="order.items.length === 1">1 item</span>
+              <span *ngIf="order.items.length > 1">{{ order.items.length }} items</span>
+            </div>
+          </td>
+          <td class="font-semibold">EGP {{ order.totalPrice | number }}</td>
+          <td>
+            <div class="payment-badge">
+              <i class="fa-solid" [ngClass]="getPaymentMethod(order) === 'COD' ? 'fa-money-bill' : 'fa-credit-card'"></i>
+              {{ getPaymentMethod(order) }}
+            </div>
+          </td>
+          <td>
+            <span class="status-badge" [ngClass]="getStatusClass(order.status)">
+              {{ getStatusDisplay(order.status) }}
+            </span>
+          </td>
+          <td class="date-cell">{{ order.orderDate | date:'dd MMM yyyy' }}</td>
+          <td>
+            <button class="icon-btn" (click)="openDrawer(order); $event.stopPropagation()">
+              <i class="fa-regular fa-eye"></i>
+            </button>
+          </td>
+        </tr>
+        
+        <tr *ngIf="orders.length === 0">
+          <td colspan="8" class="text-center py-8">No orders found.</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <!-- Pagination -->
+    <div class="pagination-container" *ngIf="pagination && pagination.totalPages > 1">
+      <div class="pagination-info">
+        Showing {{ (currentPage - 1) * limit + 1 }}-{{ min(currentPage * limit, totalOrders) }} of {{ totalOrders }} orders
+      </div>
+      <div class="pagination-controls">
+        <button class="page-btn" [disabled]="currentPage === 1" (click)="changePage(currentPage - 1)">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        
+        <ng-container *ngFor="let page of getPageArray()">
+          <button class="page-btn" [class.active]="currentPage === page" (click)="changePage(page)">
+            {{ page }}
+          </button>
+        </ng-container>
+        
+        <button class="page-btn" [disabled]="currentPage === pagination.totalPages" (click)="changePage(currentPage + 1)">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drawer -->
+  <div class="drawer-overlay" [class.open]="isDrawerOpen" (click)="closeDrawer()">
+    <div class="drawer-content" (click)="$event.stopPropagation()">
+      <div class="drawer-header" *ngIf="selectedOrder">
+        <div class="drawer-header-left">
+          <h3>#ORD-{{ selectedOrder._id.substring(selectedOrder._id.length - 5).toUpperCase() }}</h3>
+          <span class="status-badge" [ngClass]="getStatusClass(selectedOrder.status)">
+            {{ getStatusDisplay(selectedOrder.status) }}
+          </span>
+        </div>
+        <button class="close-drawer-btn" (click)="closeDrawer()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      
+      <div class="drawer-sub-header" *ngIf="selectedOrder">
+        Placed {{ selectedOrder.orderDate | date:'dd MMM yyyy · HH:mm' }}
+      </div>
+
+      <div class="drawer-body" *ngIf="selectedOrder">
+        
+        <!-- Customer Info -->
+        <div class="drawer-section customer-section">
+          <div class="customer-info-large">
+            <div class="avatar-large">{{ selectedOrder.userId.name.substring(0, 2).toUpperCase() }}</div>
+            <div class="customer-details">
+              <span class="customer-name">{{ selectedOrder.userId.name }}</span>
+              <span class="customer-since">Customer since 2024</span>
+            </div>
+          </div>
+          <div class="contact-info">
+            <div class="contact-item">
+              <i class="fa-solid fa-phone"></i>
+              <span>{{ selectedOrder.userId.phone || selectedOrder.shippingAddress.phone || 'N/A' }}</span>
+            </div>
+            <div class="contact-item">
+              <i class="fa-solid fa-location-dot"></i>
+              <span>{{ selectedOrder.shippingAddress.addressText }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Timeline -->
+        <div class="drawer-section timeline-section">
+          <h4 class="section-title">ORDER TIMELINE</h4>
+          <div class="timeline">
+            <!-- Timeline Item 1 -->
+            <div class="timeline-item completed">
+              <div class="timeline-icon"><i class="fa-solid fa-check"></i></div>
+              <div class="timeline-content">
+                <div class="timeline-title">Order Placed</div>
+                <div class="timeline-time">{{ selectedOrder.orderDate | date:'dd MMM yyyy · HH:mm' }}</div>
+              </div>
+            </div>
+            <!-- Timeline Item 2 -->
+            <div class="timeline-item" [class.completed]="['preparing', 'shipped', 'delivered'].includes(selectedOrder.status)">
+              <div class="timeline-icon">
+                <i class="fa-solid fa-check" *ngIf="['preparing', 'shipped', 'delivered'].includes(selectedOrder.status)"></i>
+                <i class="fa-solid fa-circle" *ngIf="!['preparing', 'shipped', 'delivered'].includes(selectedOrder.status)"></i>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-title">Confirmed</div>
+                <div class="timeline-time" *ngIf="['preparing', 'shipped', 'delivered'].includes(selectedOrder.status)">{{ selectedOrder.updatedAt | date:'dd MMM yyyy · HH:mm' }}</div>
+                <div class="timeline-time" *ngIf="!['preparing', 'shipped', 'delivered'].includes(selectedOrder.status)">Pending</div>
+              </div>
+            </div>
+            <!-- Timeline Item 3 -->
+            <div class="timeline-item" [class.completed]="['shipped', 'delivered'].includes(selectedOrder.status)">
+              <div class="timeline-icon">
+                <i class="fa-solid fa-check" *ngIf="['shipped', 'delivered'].includes(selectedOrder.status)"></i>
+                <i class="fa-solid fa-box" *ngIf="!['shipped', 'delivered'].includes(selectedOrder.status)"></i>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-title">Preparing</div>
+                <div class="timeline-time">Pending</div>
+              </div>
+            </div>
+             <!-- Timeline Item 4 -->
+            <div class="timeline-item" [class.completed]="['delivered'].includes(selectedOrder.status)">
+              <div class="timeline-icon">
+                <i class="fa-solid fa-check" *ngIf="['delivered'].includes(selectedOrder.status)"></i>
+                <i class="fa-solid fa-truck" *ngIf="!['delivered'].includes(selectedOrder.status)"></i>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-title">Shipped</div>
+                <div class="timeline-time">Pending</div>
+              </div>
+            </div>
+            <!-- Timeline Item 5 -->
+            <div class="timeline-item" [class.completed]="['delivered'].includes(selectedOrder.status)">
+              <div class="timeline-icon">
+                <i class="fa-regular fa-circle-check" *ngIf="!['delivered'].includes(selectedOrder.status)"></i>
+                <i class="fa-solid fa-check" *ngIf="['delivered'].includes(selectedOrder.status)"></i>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-title">Delivered</div>
+                <div class="timeline-time">Pending</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="drawer-section items-section">
+          <h4 class="section-title">ITEMS ({{ selectedOrder.items.length }})</h4>
+          <div class="items-list">
+            <div class="order-item" *ngFor="let item of selectedOrder.items">
+              <div class="item-image">
+                <img [src]="item.productId.images && item.productId.images.length > 0 ? item.productId.images[0] : 'assets/images/placeholder.png'" [alt]="item.productId.name">
+              </div>
+              <div class="item-details">
+                <div class="item-name">{{ item.productId.name }}</div>
+                <div class="item-meta">Qty {{ item.quantity }}</div>
+              </div>
+              <div class="item-price">EGP {{ item.priceAtOrderTime * item.quantity | number }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Drawer Footer -->
+      <div class="drawer-footer" *ngIf="selectedOrder">
+        <h4 class="section-title">CHANGE STATUS</h4>
+        <div class="status-update-wrapper">
+          <div class="select-wrapper full-width">
+            <select [(ngModel)]="drawerUpdateStatus">
+              <option value="pending">Pending</option>
+              <option value="preparing">Preparing</option>
+              <option value="shipped">Shipped</option>
+              <option value="delivered">Delivered</option>
+              <option value="refused">Refused</option>
+              <option value="canceled_by_admin">Cancel Order</option>
+            </select>
+          </div>
+          <button class="btn btn-primary full-width mt-3" (click)="submitStatusUpdate()">
+            <i class="fa-solid fa-check"></i> Update Status
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
