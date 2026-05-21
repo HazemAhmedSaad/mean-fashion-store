@@ -101,7 +101,13 @@
       <div *ngFor="
           let product of newArrivals;
           trackBy: trackById
-        " class="group">
+        "
+        (click)="openProductDetails(product)"
+        (keydown.enter)="openProductDetails(product)"
+        (keydown.space)="openProductDetails(product)"
+        role="link"
+        tabindex="0"
+        class="group cursor-pointer focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-4 rounded-[2rem]">
         <div class="relative w-full aspect-[3/4] bg-gray-100 rounded-[2rem] overflow-hidden mb-5">
           <img [src]="'http://localhost:8000' + product.images?.[0] || fallbackImage" [alt]="product.name"
             (error)="onImageError($event)" class="w-full h-full object-cover group-hover:scale-105 transition-transform
@@ -119,6 +125,7 @@
           <!-- Wishlist -->
 
           <button
+            (click)="$event.stopPropagation()"
             class="absolute top-5 right-5 w-10 h-10 bg-white rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 shadow-sm transition-all hover:scale-110">
             <i class="fa-regular fa-heart"></i>
           </button>
@@ -128,7 +135,7 @@
           <div
             class="absolute bottom-5 left-5 right-5 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-4 group-hover:translate-y-0 hidden lg:block z-10">
             <button
-              (click)="addToCart(product)"
+              (click)="$event.stopPropagation(); addToCart(product)"
               class="w-full bg-white text-black font-semibold py-4 rounded-full hover:bg-gray-50 shadow-xl transition-colors">
               Add to Cart
             </button>
@@ -137,9 +144,9 @@
 
         <div class="flex justify-between items-start mb-2 gap-4">
           <h3 class="font-medium text-gray-900 text-lg leading-tight">
-            <a [routerLink]="['/products', product.slug]" class="hover:underline">
+            <span class="hover:underline">
               {{ product.name }}
-            </a>
+            </span>
           </h3>
 
           <span class="font-bold text-lg whitespace-nowrap">
@@ -156,53 +163,6 @@
 
   <!-- Testimonials -->
 
-  <section class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <h2 class="text-3xl font-bold mb-2 tracking-tight">
-      What Customers Say
-    </h2>
+  <app-testimonials [testimonials]="apiTestimonials"></app-testimonials>
 
-    <p class="text-gray-500 text-lg mb-12">
-      Real stories from our community
-    </p>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-      <div *ngFor="
-          let review of apiTestimonials;
-          trackBy: trackById
-        "
-        class="bg-[#F9F9F9] p-10 rounded-[2rem] flex flex-col justify-between h-full hover:shadow-md transition-shadow">
-        <div>
-          <div class="flex text-[#F2B035] mb-6 gap-1.5 text-sm">
-            <i class="fa-solid fa-star" *ngFor="
-                let star of getStars(review.stars || 5)
-              "></i>
-          </div>
-
-          <p class="text-gray-800 font-medium leading-relaxed mb-10 text-lg">
-            {{ review.comment }}
-          </p>
-        </div>
-
-        <div class="flex items-center gap-4 mt-auto">
-          <img [src]="
-              review.avatar ||
-              'https://i.pravatar.cc/150?u=' + review.name
-            " [alt]="review.name" (error)="onImageError($event)"
-            class="w-12 h-12 rounded-full object-cover shadow-sm" />
-
-          <div>
-            <p class="font-bold text-gray-900">
-              {{ review.name }}
-            </p>
-
-            <p class="text-gray-500 text-xs flex items-center gap-1.5 mt-0.5">
-              <i class="fa-solid fa-circle-check text-green-600"></i>
-
-              Verified Buyer
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
 </main>

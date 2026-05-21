@@ -3,28 +3,9 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, Subject } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { AuthResponse } from '../models/auth.interface';
+import { AuthResponse, JwtPayload, LoginRequest, SignupRequest } from '../models/auth.interface';
 
-interface JwtPayload {
-  id?: string;
-  name?: string;
-  phone?: string;
-  email?: string;
-  role?: string;
-  exp?: number;
-}
 
-export interface SignupRequest {
-  name: string;
-  phone: string;
-  email?: string;
-  password: string;
-}
-
-export interface LoginRequest {
-  phone: string;
-  password: string;
-}
 
 @Injectable({
   providedIn: 'root',

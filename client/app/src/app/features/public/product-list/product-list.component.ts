@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Subject, forkJoin, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
@@ -79,6 +79,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
     private categoryService: CategoryService,
     private subCategoryService: SubCategoryService,
     private cartService: CartService,
+    private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -112,7 +113,7 @@ export class ProductListComponent implements OnInit, OnDestroy {
   loadFiltersAndProducts(): void {
     this.isLoading = true;
     forkJoin({
-      categories: this.categoryService.getAll(),
+      categories: this.categoryService.getAll(),      
       subCategories: this.subCategoryService.getAll()
     }).subscribe({
       next: (res) => {
@@ -237,6 +238,10 @@ export class ProductListComponent implements OnInit, OnDestroy {
   }
 
   // Add items to server-side shopping cart
+  openProductDetails(product: Product): void {
+    this.router.navigate(['/products', product.slug, product._id]);
+  }
+
   addToCart(product: Product): void {
     const productMeta = {
       name: product.name,

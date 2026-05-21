@@ -5,7 +5,6 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   CategoryResponse,
-  Category,
   singleCategoryResponse,
   CreateCategoryRequest,
   UpdateCategoryRequest,

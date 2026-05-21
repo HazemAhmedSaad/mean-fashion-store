@@ -280,7 +280,12 @@
       <div *ngIf="!isLoading && products.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <div 
           *ngFor="let product of products" 
-          class="group bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col h-full relative"
+          (click)="openProductDetails(product)"
+          (keydown.enter)="openProductDetails(product)"
+          (keydown.space)="openProductDetails(product)"
+          role="link"
+          tabindex="0"
+          class="group bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col h-full relative cursor-pointer focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
         >
           <!-- Product image container -->
           <div class="relative overflow-hidden aspect-[3/4] bg-gray-50">
@@ -296,7 +301,7 @@
 
             <!-- Wishlist Heart Toggle Button -->
             <button 
-              (click)="toggleWishlist(product._id)" 
+              (click)="$event.stopPropagation(); toggleWishlist(product._id)" 
               class="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm border border-gray-100 flex items-center justify-center text-gray-500 hover:text-red-500 hover:scale-110 transition-all duration-200 shadow-sm cursor-pointer"
             >
               <i class="fa-heart text-sm transition-colors duration-150" 
@@ -324,7 +329,7 @@
 
             <!-- Add to Cart Button -->
             <button 
-              (click)="addToCart(product)" 
+              (click)="$event.stopPropagation(); addToCart(product)" 
               class="w-full bg-white hover:bg-black border border-gray-200 hover:border-black text-black hover:text-white py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all duration-200 cursor-pointer shadow-xs"
             >
               <i class="fa-solid fa-bag-shopping text-xs"></i>

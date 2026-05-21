@@ -1,1 +1,51 @@
-<p>testimonials works!</p>
+  <!-- Testimonials -->
+
+  <section class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <h2 class="text-3xl font-bold mb-2 tracking-tight">
+      What Customers Say
+    </h2>
+
+    <p class="text-gray-500 text-lg mb-12">
+      Real stories from our community
+    </p>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div *ngFor="
+          let review of testimonials;
+          trackBy: trackById
+        "
+        class="bg-[#F9F9F9] p-10 rounded-[2rem] flex flex-col justify-between h-full hover:shadow-md transition-shadow">
+        <div>
+          <div class="flex text-[#F2B035] mb-6 gap-1.5 text-sm">
+            <i class="fa-solid fa-star" *ngFor="
+                let star of getStars(review.stars || 5)
+              "></i>
+          </div>
+
+          <p class="text-gray-800 font-medium leading-relaxed mb-10 text-lg">
+            {{ review.comment }}
+          </p>
+        </div>
+
+        <div class="flex items-center gap-4 mt-auto">
+          <img [src]="
+              review.avatar ||
+              'https://i.pravatar.cc/150?u=' + review.name
+            " [alt]="review.name" (error)="onImageError($event)"
+            class="w-12 h-12 rounded-full object-cover shadow-sm" />
+
+          <div>
+            <p class="font-bold text-gray-900">
+              {{ review.name }}
+            </p>
+
+            <p class="text-gray-500 text-xs flex items-center gap-1.5 mt-0.5">
+              <i class="fa-solid fa-circle-check text-green-600"></i>
+
+              Verified Buyer
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>

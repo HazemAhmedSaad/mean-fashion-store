@@ -1,1 +1,149 @@
-<p>signup works!</p>
+<main class="auth-page">
+  <section class="auth-visual auth-visual--signup" aria-label="MAISON street style campaign">
+    <a routerLink="/home" class="brand-mark">
+      <i class="fa-solid fa-shirt"></i>
+      <span>MAISON</span>
+    </a>
+
+    <blockquote>
+      <p>"Style is a way to say who you are without having to speak."</p>
+      <cite>Rachel Zoe</cite>
+    </blockquote>
+  </section>
+
+  <section class="auth-panel">
+    <form class="auth-card" (ngSubmit)="signup()" #signupForm="ngForm">
+      <p class="eyebrow">Join Maison</p>
+      <h1>Create Your Account</h1>
+      <p class="subtitle">Start shopping and track your orders.</p>
+
+      <div *ngIf="errorMessage" class="form-alert">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <div class="field-grid">
+        <label class="field">
+          <span>First Name</span>
+          <input
+            type="text"
+            name="firstName"
+            [(ngModel)]="firstName"
+            placeholder="Layla"
+            autocomplete="given-name"
+            required
+          />
+        </label>
+
+        <label class="field">
+          <span>Last Name</span>
+          <input
+            type="text"
+            name="lastName"
+            [(ngModel)]="lastName"
+            placeholder="Hassan"
+            autocomplete="family-name"
+          />
+        </label>
+      </div>
+
+      <label class="field">
+        <span>Email Address</span>
+        <input
+          type="email"
+          name="email"
+          [(ngModel)]="email"
+          placeholder="hello@maison.co"
+          autocomplete="email"
+        />
+      </label>
+
+      <label class="field">
+        <span>Phone Number</span>
+        <div class="phone-field">
+          <span>EG +20</span>
+          <input
+            type="tel"
+            name="phone"
+            [(ngModel)]="phone"
+            placeholder="010 1234 5678"
+            autocomplete="tel"
+            required
+          />
+        </div>
+      </label>
+
+      <label class="field">
+        <span>Password</span>
+        <div class="password-field">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            name="password"
+            [(ngModel)]="password"
+            placeholder="Create a strong password"
+            autocomplete="new-password"
+            required
+          />
+          <button type="button" (click)="togglePassword()" [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
+            <i class="fa-regular" [ngClass]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+          </button>
+        </div>
+      </label>
+
+      <div class="strength">
+        <div class="strength-bars" [class]="strengthClass">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <p>{{ password ? passwordStrength + ' strength' : 'Use at least 8 characters' }}</p>
+      </div>
+
+      <label class="field">
+        <span>Confirm Password</span>
+        <div class="password-field">
+          <input
+            [type]="showConfirmPassword ? 'text' : 'password'"
+            name="confirmPassword"
+            [(ngModel)]="confirmPassword"
+            placeholder="Re-enter your password"
+            autocomplete="new-password"
+            required
+          />
+          <button type="button" (click)="toggleConfirmPassword()" [attr.aria-label]="showConfirmPassword ? 'Hide password' : 'Show password'">
+            <i class="fa-regular" [ngClass]="showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+          </button>
+        </div>
+      </label>
+
+      <label class="terms-line">
+        <input type="checkbox" name="acceptedTerms" [(ngModel)]="acceptedTerms" />
+        <span>
+          I agree to the
+          <a routerLink="/signup">Terms of Service</a>
+          and
+          <a routerLink="/signup">Privacy Policy</a>
+        </span>
+      </label>
+
+      <button class="primary-button" type="submit" [disabled]="isSubmitting">
+        <i class="fa-solid" [ngClass]="isSubmitting ? 'fa-spinner fa-spin' : 'fa-user-plus'"></i>
+        {{ isSubmitting ? 'Creating Account...' : 'Create Account' }}
+      </button>
+
+      <div class="divider">
+        <span>Or</span>
+      </div>
+
+      <button class="guest-button" type="button" (click)="continueAsGuest()">
+        <i class="fa-regular fa-square-check"></i>
+        Continue as Guest
+      </button>
+
+      <p class="switch-link">
+        Already have an account?
+        <a routerLink="/login">Sign In</a>
+      </p>
+    </form>
+  </section>
+</main>

@@ -1,1 +1,82 @@
-<p>login works!</p>
+<main class="auth-page">
+  <section class="auth-visual auth-visual--login" aria-label="MAISON fashion campaign">
+    <a routerLink="/home" class="brand-mark">
+      <i class="fa-solid fa-shirt"></i>
+      <span>MAISON</span>
+    </a>
+
+    <div class="campaign-copy">
+      <p>Autumn / Winter 2026</p>
+      <h2>Dress the moment, own the season.</h2>
+    </div>
+  </section>
+
+  <section class="auth-panel">
+    <form class="auth-card" (ngSubmit)="login()" #loginForm="ngForm">
+      <p class="eyebrow">Welcome Back</p>
+      <h1>Sign In to MAISON</h1>
+      <p class="subtitle">Access your orders, wishlist and more.</p>
+
+      <div *ngIf="errorMessage" class="form-alert">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <label class="field">
+        <span>Phone Number</span>
+        <input
+          type="tel"
+          name="phone"
+          [(ngModel)]="phone"
+          placeholder="010 1234 5678"
+          autocomplete="tel"
+          required
+        />
+      </label>
+
+      <label class="field">
+        <span>Password</span>
+        <div class="password-field">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            name="password"
+            [(ngModel)]="password"
+            placeholder="Enter your password"
+            autocomplete="current-password"
+            required
+          />
+          <button type="button" (click)="togglePassword()" [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'">
+            <i class="fa-regular" [ngClass]="showPassword ? 'fa-eye-slash' : 'fa-eye'"></i>
+          </button>
+        </div>
+      </label>
+
+      <div class="form-row">
+        <label class="check-line">
+          <input type="checkbox" name="rememberMe" [(ngModel)]="rememberMe" />
+          <span>Remember me</span>
+        </label>
+        <a routerLink="/login">Forgot password?</a>
+      </div>
+
+      <button class="primary-button" type="submit" [disabled]="isSubmitting">
+        <i class="fa-solid" [ngClass]="isSubmitting ? 'fa-spinner fa-spin' : 'fa-right-to-bracket'"></i>
+        {{ isSubmitting ? 'Signing In...' : 'Sign In' }}
+      </button>
+
+      <div class="divider">
+        <span>Or Continue As</span>
+      </div>
+
+      <button class="guest-button" type="button" (click)="continueAsGuest()">
+        <i class="fa-regular fa-square-check"></i>
+        Continue as Guest
+      </button>
+
+      <p class="switch-link">
+        Don't have an account?
+        <a routerLink="/signup">Create Account</a>
+      </p>
+    </form>
+  </section>
+</main>

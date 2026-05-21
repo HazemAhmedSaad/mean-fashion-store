@@ -5,7 +5,7 @@ import {
   OnInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 
 import { CategoryService } from '../../../core/services/category.service';
@@ -16,11 +16,12 @@ import { CartService } from '../../../core/services/cart.service';
 import { Category } from '../../../core/models/category.interface';
 import { Product } from '../../../core/models/product.interface';
 import { Testimonial } from '../../../core/models/testimonial.interface';
+import { TestimonialsComponent } from "../testimonials/testimonials.component";
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TestimonialsComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,6 +41,7 @@ export class HomeComponent implements OnInit {
     private productService: ProductService,
     private testimonialService: TestimonialService,
     private cartService: CartService,
+    private router: Router,
     private cdr: ChangeDetectorRef
   ) { }
 
@@ -83,6 +85,10 @@ export class HomeComponent implements OnInit {
 
   onImageError(event: Event): void {
     (event.target as HTMLImageElement).src = this.fallbackImage;
+  }
+
+  openProductDetails(product: Product): void {
+    this.router.navigate(['/products', product.slug, product._id]);
   }
 
   addToCart(product: Product): void {

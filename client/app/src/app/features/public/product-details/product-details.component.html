@@ -1,1 +1,207 @@
-<p>product-details works!</p>
+<div
+  *ngIf="toast.show"
+  class="product-toast"
+  [class.product-toast--error]="toast.type === 'error'"
+  [class.product-toast--info]="toast.type === 'info'"
+>
+  <i
+    class="fa-solid"
+    [ngClass]="{
+      'fa-circle-check': toast.type === 'success',
+      'fa-circle-info': toast.type === 'info',
+      'fa-triangle-exclamation': toast.type === 'error'
+    }"
+  ></i>
+  <span>{{ toast.message }}</span>
+</div>
+
+<main class="product-details-page">
+  <section *ngIf="isLoading" class="details-state">
+    <div class="details-spinner"></div>
+    <p>Loading product details...</p>
+  </section>
+
+  <section *ngIf="!isLoading && isNotFound" class="details-state details-state--empty">
+    <i class="fa-regular fa-face-frown"></i>
+    <h1>Product not found</h1>
+    <p>We could not find the product you are looking for.</p>
+    <a routerLink="/products">Back to shop</a>
+  </section>
+
+  <ng-container *ngIf="!isLoading && !isNotFound && product">
+    <nav class="details-breadcrumb" aria-label="Breadcrumb">
+      <a routerLink="/home">Home</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <a routerLink="/products">Products</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span>{{ category?.title || 'Collection' }}</span>
+      <i class="fa-solid fa-chevron-right"></i>
+      <strong>{{ product.name }}</strong>
+    </nav>
+
+    <section class="details-grid">
+      <div class="gallery-column">
+        <div class="main-image-wrap">
+          <span class="season-badge">New Season</span>
+          <button class="expand-button" type="button" aria-label="View larger image">
+            <i class="fa-solid fa-expand"></i>
+          </button>
+          <button class="gallery-arrow gallery-arrow--left" type="button" (click)="prevImage()" aria-label="Previous image">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          <img [src]="getActiveImage()" [alt]="product.name" class="main-product-image" />
+          <button class="gallery-arrow gallery-arrow--right" type="button" (click)="nextImage()" aria-label="Next image">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+
+        <div class="thumb-strip" aria-label="Product images">
+          <button
+            *ngFor="let image of getProductImages(); let i = index"
+            type="button"
+            class="thumb-button"
+            [class.thumb-button--active]="i === activeImageIndex"
+            (click)="selectImage(i)"
+            [attr.aria-label]="'Show image ' + (i + 1)"
+          >
+            <img [src]="image" [alt]="product.name + ' thumbnail ' + (i + 1)" />
+          </button>
+        </div>
+      </div>
+
+      <article class="product-info">
+        <p class="eyebrow">Maison · {{ category?.title || 'Collection' }}</p>
+        <h1>{{ product.name }}</h1>
+
+        <div class="rating-row">
+          <span class="stars" aria-label="Product rating">
+            <i class="fa-solid fa-star" *ngFor="let star of getStars(getMockRating())"></i>
+            <i class="fa-regular fa-star" *ngFor="let star of getEmptyStars(getMockRating())"></i>
+          </span>
+          <strong>{{ getMockRating() | number:'1.1-1' }}</strong>
+          <a href="#reviews">{{ getMockReviewCount() }} reviews</a>
+        </div>
+
+        <div class="price-row">
+          <div>
+            <span class="current-price">EGP {{ product.price }}</span>
+            <span class="old-price" *ngIf="getOriginalPrice()">EGP {{ getOriginalPrice() }}</span>
+            <span class="discount-pill" *ngIf="getDiscountPercent()">-{{ getDiscountPercent() }}%</span>
+          </div>
+          <span
+            class="stock-pill"  
+            [class.stock-pill--danger]="isOutOfStock"
+            [class.stock-pill--warning]="isLowStock"
+          >
+            <i class="fa-solid" [ngClass]="isOutOfStock ? 'fa-circle-xmark' : 'fa-circle-exclamation'"></i>
+            {{ stockLabel }}
+          </span>
+        </div>
+
+        <div class="option-block">
+          <div class="option-heading">
+            <span>Size</span>
+            <a href="#description">Size guide</a>
+          </div>
+          <div class="size-options">
+            <button
+              *ngFor="let size of sizes"
+              type="button"
+              class="size-button"
+              [class.size-button--active]="selectedSize === size"
+              [class.size-button--muted]="size === 'XXL'"
+              (click)="selectSize(size)"
+            >
+              {{ size }}
+            </button>
+          </div>
+        </div>
+
+        <div class="option-block">
+          <div class="option-heading option-heading--left">
+            <span>Color</span>
+            <strong>· {{ selectedColor || 'Beige' }}</strong>
+          </div>
+          <div class="color-options">
+            <button
+              *ngFor="let color of colors"
+              type="button"
+              class="color-button"
+              [class.color-button--active]="selectedColor === color.name"
+              (click)="selectColor(color.name)"
+              [attr.aria-label]="color.name"
+            >
+              <span [style.background]="color.hex"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="purchase-row">
+          <div class="quantity-control" aria-label="Quantity">
+            <button type="button" (click)="decrementQty()" [disabled]="quantity <= 1">-</button>
+            <span>{{ quantity }}</span>
+            <button type="button" (click)="incrementQty()" [disabled]="isOutOfStock || quantity >= product.stock">+</button>
+          </div>
+
+          <button class="add-cart-button" type="button" (click)="addToCart()" [disabled]="isOutOfStock">
+            <i class="fa-solid fa-bag-shopping"></i>
+            {{ isOutOfStock ? 'Out of Stock' : 'Add to Cart' }}
+          </button>
+        </div>
+
+        <button class="wishlist-button" type="button" (click)="toggleWishlist()">
+          <i class="fa-heart" [ngClass]="isInWishlist ? 'fa-solid' : 'fa-regular'"></i>
+          {{ isInWishlist ? 'Saved to Wishlist' : 'Save to Wishlist' }}
+        </button>
+
+        <section id="description" class="description-card">
+          <h2>Description</h2>
+          <p>
+            {{ product.description || 'Crafted for everyday wear with a relaxed, breathable silhouette and a polished finish. Pair it with your favorite wardrobe essentials for an effortless look.' }}
+          </p>
+          <div class="service-row">
+            <span><i class="fa-solid fa-truck"></i> Free delivery over EGP 800</span>
+            <span><i class="fa-solid fa-rotate-left"></i> 14-day returns</span>
+          </div>
+        </section>
+      </article>
+    </section>
+
+    <section class="related-section" *ngIf="relatedProducts.length > 0">
+      <div class="section-heading">
+        <div>
+          <p>You May Also Like</p>
+          <h2>Related Products</h2>
+        </div>
+        <div class="section-controls" aria-hidden="true">
+          <button type="button"><i class="fa-solid fa-chevron-left"></i></button>
+          <button type="button"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+      </div>
+
+      <div class="related-grid">
+        <a
+          *ngFor="let related of relatedProducts.slice(0, 4); trackBy: trackById"
+          class="related-card"
+          [routerLink]="['/products', related.slug, related._id]"
+        >
+          <div class="related-image">
+            <span *ngIf="related.stock > 0 && related.stock <= 5" class="related-badge related-badge--stock">Low Stock</span>
+            <span *ngIf="related.stock > 5" class="related-badge">New</span>
+            <button type="button" class="related-heart" aria-label="Save product" (click)="$event.preventDefault()">
+              <i class="fa-regular fa-heart"></i>
+            </button>
+            <img [src]="getRelatedImage(related)" [alt]="related.name" />
+          </div>
+          <div class="related-meta">
+            <div>
+              <h3>{{ related.name }}</h3>
+              <p>{{ getRelatedCategoryName(related) }}</p>
+            </div>
+            <strong>EGP {{ related.price }}</strong>
+          </div>
+        </a>
+      </div>
+    </section>
+  </ng-container>
+</main>
